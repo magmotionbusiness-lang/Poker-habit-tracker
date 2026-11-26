@@ -1,17 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, Check, Inbox, Quote, Target } from "lucide-react";
-import { useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
+import { BookOpen, ChevronRight, Play, Quote, ShieldCheck, Sparkles, Timer } from "lucide-react";
 import { StreakFlame } from "@/components/brand/streak-flame";
+import { GoalCard } from "@/components/goals/goal-card";
+import { formatClock, formatDuration } from "@/components/sessions/timer";
 import { InstallPrompt } from "@/components/shell/install-prompt";
 import { PageHeader } from "@/components/shell/page-header";
-import { Badge } from "@/components/ui/badge";
+import { HabitRingButton } from "@/components/today/habit-ring-button";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, Stat } from "@/components/ui/card";
-import { ProgressBar, ProgressRing } from "@/components/ui/progress";
+import { Card, CardHeader } from "@/components/ui/card";
+import { Dialog } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { setHabitValue } from "@/lib/db/actions";
+import { useHabitEngine } from "@/lib/db/derived";
+import { useGoalViews } from "@/lib/db/goal-hooks";
+import {
+  useNow,
+  useRunningSession,
+  useSessions,
+  useStackUpdates,
+  useStudySessions,
+} from "@/lib/db/hooks";
+import { addDays, localDate, startOfWeek } from "@/lib/dates/dates";
+import { haptic } from "@/lib/haptics";
 import { formatMoney } from "@/lib/money";
+import { resultIn, sessionDurationMs } from "@/lib/stats/session-math";
+import { STREAK_MILESTONES } from "@/lib/streaks/streaks";
 import { useAppStore } from "@/lib/store/app-store";
+import { useStudyTimer, useUi } from "@/lib/store/ui-store";
 
 function greetingFor(hour: number) {
   if (hour < 5) return "Late session?";
@@ -21,21 +39,49 @@ function greetingFor(hour: number) {
 }
 const noop = () => () => {};
 
-/** Phase 0 preview of the habit-loop home. Values are zero until Phase 1 wires real data. */
 export function TodayScreen() {
   const greeting = useSyncExternalStore(
     noop,
     () => greetingFor(new Date().getHours()),
     () => "Welcome back",
   );
+  const engine = useHabitEngine();
   const currency = useAppStore((s) => s.prefs.currency);
-  const goal = { current: 0, target: 5_000_000 };
+  const goals = useGoalViews(currency);
+  const open = useUi((s) => s.open);
+  const dismissed = useAppStore((s) => s.dismissed);
+  const dismiss = useAppStore((s) => s.dismiss);
 
-  const habits = [
-    { name: "Review hands", value: 0, target: 3, unit: "" },
-    { name: "Study", value: 0, target: 30, unit: "min" },
-    { name: "Warm-up", value: 0, target: 1, unit: "" },
-  ];
+  if (!engine) {
+    return (
+      <div className="space-y-4 pt-5">
+        <Skeleton className="h-10 w-40" />
+        <Skeleton className="h-36 w-full" />
+        <Skeleton className="h-48 w-full" />
+      </div>
+    );
+  }
+  const { streak, todayInput, today } = engine;
+  const habits = todayInput.habits.filter((h) => h.habit.active);
+  const main = goals?.find((g) => g.goal.is_main) ?? goals?.[0];
+  const yesterday = addDays(today, -1);
+  // Celebrate a milestone on the day it's reached (or the morning after), not days later.
+  const milestone = [...STREAK_MILESTONES]
+    .reverse()
+    .find((m) => streak.current >= m && streak.current - m <= 1);
+  const runStart = addDays(today, -(streak.current - (streak.todayDone ? 1 : 0)));
+  const milestoneKey = milestone ? `milestone:${milestone}:${runStart}` : null;
+
+  async function tap(day: (typeof habits)[number]) {
+    const h = day.habit;
+    if (h.unit === "minutes") return open("study");
+    haptic();
+    await setHabitValue(
+      h.id,
+      today,
+      h.unit === "boolean" ? (day.value >= 1 ? 0 : 1) : day.value + 1,
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -43,104 +89,245 @@ export function TodayScreen() {
         eyebrow={greeting}
         title="Today"
         action={
-          <Link href="/progress" aria-label="Streak details" className="rounded-full p-1">
-            <StreakFlame count={0} />
+          <Link
+            href="/progress"
+            aria-label={`${streak.current}-day streak. Streak details`}
+            className="rounded-full p-1"
+          >
+            <StreakFlame count={streak.current} />
           </Link>
         }
       />
 
-      <Badge variant="outline" size="sm">
-        Phase 0 preview · data arrives in Phase 1
-      </Badge>
+      <RunningBanner />
+      <StudyTimerBanner />
+
+      {streak.repair && (
+        <Card className="border-gold/40 bg-gold/5">
+          <p className="font-semibold text-ink">Your {streak.current}-day streak is at risk</p>
+          <p className="mt-1 text-sm text-ink-muted">
+            You missed yesterday. Double up today —{" "}
+            {streak.repair.requiredDoubled === 1
+              ? "one habit"
+              : `${streak.repair.requiredDoubled} habits`}{" "}
+            at 2× the target — and it&apos;s repaired. One repair per streak.
+          </p>
+        </Card>
+      )}
+      {streak.freezesUsedOn.at(-1) === yesterday && !dismissed[`freeze:${yesterday}`] && (
+        <Card className="flex items-start gap-3">
+          <ShieldCheck className="mt-0.5 size-5 shrink-0 text-lavender" aria-hidden />
+          <div className="flex-1">
+            <p className="font-semibold">A streak freeze saved your streak yesterday.</p>
+            <p className="text-sm text-ink-muted">
+              {streak.freezesAvailable} freeze{streak.freezesAvailable === 1 ? "" : "s"} left. Earn
+              one every 7 days.
+            </p>
+          </div>
+          <Button size="sm" variant="ghost" onClick={() => dismiss(`freeze:${yesterday}`)}>
+            OK
+          </Button>
+        </Card>
+      )}
 
       <InstallPrompt />
 
       <Card>
         <CardHeader
           eyebrow="Today's habits"
-          action={<span className="num text-sm text-ink-muted">0 / 3</span>}
+          action={
+            <span className="num text-sm text-ink-muted">
+              {todayInput.required
+                ? `${Math.min(todayInput.done, todayInput.required)}/${todayInput.required} to count`
+                : "Rest day"}
+            </span>
+          }
         />
-        <ul className="grid grid-cols-3 gap-2">
-          {habits.map((h) => (
-            <li key={h.name}>
-              <button
-                type="button"
-                className="flex w-full flex-col items-center gap-2 rounded-md py-2 hover:bg-white/[0.03]"
-              >
-                <ProgressRing
-                  value={h.value / h.target}
-                  label={`${h.name}: ${h.value} of ${h.target}`}
-                >
-                  {h.value >= h.target ? (
-                    <Check className="size-5 text-success" aria-hidden />
-                  ) : (
-                    <span className="num text-sm font-semibold">
-                      {h.value}/{h.target}
-                    </span>
-                  )}
-                </ProgressRing>
-                <span className="text-center text-[13px] leading-tight text-ink-soft">
-                  {h.name}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </Card>
-
-      <Card glow>
-        <CardHeader
-          eyebrow="Main goal"
-          action={<Target className="size-5 text-lavender" strokeWidth={1.6} aria-hidden />}
-        />
-        <p className="mb-3 font-display text-xl font-semibold tracking-[-0.01em]">
-          Make my first <span className="text-gradient">$50k from poker</span>
-        </p>
-        <div className="flex items-end justify-between gap-3">
-          <Stat
-            value={formatMoney({ minor: goal.current, currency: "USD" }, { trimZeroCents: true })}
-            label={`of ${formatMoney({ minor: goal.target, currency: "USD" }, { trimZeroCents: true })} profit`}
-          />
-          <span className="num pb-1 text-sm font-semibold text-lavender">0%</span>
-        </div>
-        <ProgressBar
-          className="mt-3"
-          value={goal.current / goal.target}
-          label="Progress toward main goal"
-        />
-        <p className="mt-2.5 text-xs text-ink-subtle">
-          Projected date appears after your first sessions · display currency {currency}
-        </p>
-      </Card>
-
-      <div className="grid grid-cols-2 gap-3">
-        <Card className="p-4">
-          <Inbox className="mb-3 size-5 text-lavender" strokeWidth={1.6} aria-hidden />
-          <p className="num font-display text-[28px] leading-none font-semibold">0</p>
-          <p className="mt-1.5 text-sm text-ink-muted">hands waiting for review</p>
-        </Card>
-        <Card className="p-4">
-          <BookOpen className="mb-3 size-5 text-lavender" strokeWidth={1.6} aria-hidden />
-          <p className="num font-display text-[28px] leading-none font-semibold">
-            0<span className="text-base text-ink-muted"> min</span>
+        {habits.length === 0 ? (
+          <div className="py-2 text-center">
+            <p className="text-sm text-ink-muted">
+              No habits yet — that&apos;s the system&apos;s engine.
+            </p>
+            <Button className="mt-3" size="sm" asChild>
+              <Link href="/more/habits">Pick your habits</Link>
+            </Button>
+          </div>
+        ) : (
+          <ul className="grid grid-cols-3 gap-2">
+            {habits.map((d) => (
+              <li key={d.habit.id}>
+                <HabitRingButton
+                  day={d}
+                  onTap={() => tap(d)}
+                  onMinus={() => setHabitValue(d.habit.id, today, d.value - 1)}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+        {streak.todayDone && (
+          <p className="mt-3 text-center text-sm font-semibold text-success">
+            ✓ Today counts. Streak safe.
           </p>
-          <p className="mt-1.5 text-sm text-ink-muted">studied this week</p>
-        </Card>
-      </div>
+        )}
+      </Card>
 
-      <Card>
-        <CardHeader
-          eyebrow="Rule of the day"
-          action={<Quote className="size-5 text-lavender" strokeWidth={1.6} aria-hidden />}
-        />
-        <p className="font-display text-lg leading-snug text-ink-soft italic">
-          Your own rules from hand reviews will resurface here — the lessons you wrote, when you
-          need them.
+      {main ? (
+        <Link href="/progress" className="block">
+          <GoalCard view={main} />
+        </Link>
+      ) : (
+        <Card className="text-center">
+          <p className="font-semibold">Set your main goal</p>
+          <Button className="mt-3" size="sm" asChild>
+            <Link href="/progress">Add goal</Link>
+          </Button>
+        </Card>
+      )}
+
+      <ThisWeek today={today} tz={engine.tz} />
+      <LastTakeaway />
+
+      {milestone && milestoneKey && !dismissed[milestoneKey] && (
+        <Dialog
+          open
+          onOpenChange={() => dismiss(milestoneKey)}
+          title={`${milestone}-day streak`}
+          description="Consistency is the edge most players never build. Keep the system running."
+        >
+          <div className="flex flex-col items-center gap-4 py-2">
+            <div className="grid size-28 place-items-center rounded-full bg-[radial-gradient(circle,rgba(124,92,255,0.45),transparent_70%)]">
+              <StreakFlame count={milestone} size="lg" />
+            </div>
+            <Button
+              block
+              onClick={() => {
+                haptic([10, 40, 10]);
+                dismiss(milestoneKey);
+              }}
+            >
+              <Sparkles aria-hidden /> Keep going
+            </Button>
+          </div>
+        </Dialog>
+      )}
+    </div>
+  );
+}
+
+function RunningBanner() {
+  const running = useRunningSession();
+  const updates = useStackUpdates(running?.id ?? null) ?? [];
+  const now = useNow(1000);
+  if (!running) return null;
+  const stack = updates.at(-1)?.stack_minor ?? running.buy_in_minor;
+  const up = stack - running.buy_in_minor - running.rebuys_minor;
+  return (
+    <Link href="/session" className="block">
+      <Card glow className="flex items-center gap-3">
+        <span className="grid size-11 shrink-0 place-items-center rounded-full bg-[image:var(--gradient-primary)] text-white shadow-accent">
+          <Play className="size-5" aria-hidden />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="eyebrow">{running.paused_at ? "Session paused" : "Session running"}</p>
+          <p className="num font-display text-2xl font-semibold">
+            {formatClock(sessionDurationMs(running, now))}
+          </p>
+        </div>
+        <span
+          className={`num font-semibold ${up > 0 ? "text-success" : up < 0 ? "text-danger" : "text-ink-muted"}`}
+        >
+          {formatMoney(
+            { minor: up, currency: running.currency },
+            { signed: true, trimZeroCents: true },
+          )}
+        </span>
+        <ChevronRight className="size-5 text-ink-subtle" aria-hidden />
+      </Card>
+    </Link>
+  );
+}
+
+function StudyTimerBanner() {
+  const startedAt = useStudyTimer((s) => s.startedAt);
+  const open = useUi((s) => s.open);
+  const now = useNow(1000);
+  if (!startedAt) return null;
+  return (
+    <button type="button" onClick={() => open("study")} className="block w-full text-left">
+      <Card className="flex items-center gap-3">
+        <Timer className="size-5 text-lavender" aria-hidden />
+        <span className="flex-1 font-semibold">Studying</span>
+        <span className="num font-display text-xl font-semibold">
+          {formatClock(now - Date.parse(startedAt))}
+        </span>
+      </Card>
+    </button>
+  );
+}
+
+function ThisWeek({ today, tz }: { today: string; tz: string }) {
+  const sessions = useSessions();
+  const study = useStudySessions();
+  const currency = useAppStore((s) => s.prefs.currency);
+  const week = useMemo(() => {
+    if (!sessions || !study) return null;
+    const from = startOfWeek(today);
+    const inWeek = sessions.filter(
+      (s) => s.status === "finished" && localDate(s.started_at, tz) >= from,
+    );
+    const ms = inWeek.reduce((a, s) => a + sessionDurationMs(s), 0);
+    const net = inWeek.reduce((a, s) => a + (resultIn(s, currency, {}, true) ?? 0), 0);
+    const mixed = inWeek.some((s) => s.currency !== currency);
+    const minutes = study
+      .filter((s) => localDate(s.started_at, tz) >= from)
+      .reduce((a, s) => a + s.minutes, 0);
+    return { count: inWeek.length, ms, net, mixed, minutes };
+  }, [sessions, study, today, tz, currency]);
+  if (!week) return null;
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <Card className="p-4">
+        <p className="eyebrow mb-3">This week</p>
+        <p
+          className={`num font-display text-[28px] leading-none font-semibold ${week.net > 0 ? "text-success" : week.net < 0 ? "text-danger" : ""}`}
+        >
+          {formatMoney(
+            { minor: week.net, currency },
+            { signed: true, compact: Math.abs(week.net) >= 1_000_000, trimZeroCents: true },
+          )}
         </p>
-        <Button variant="link" size="sm" className="mt-3" asChild>
-          <Link href="/hands">Review a hand →</Link>
-        </Button>
+        <p className="mt-1.5 text-sm text-ink-muted">
+          {week.count} session{week.count === 1 ? "" : "s"} · {formatDuration(week.ms)}
+          {week.mixed && " · other currencies excluded"}
+        </p>
+      </Card>
+      <Card className="p-4">
+        <BookOpen className="mb-3 size-5 text-lavender" strokeWidth={1.6} aria-hidden />
+        <p className="num font-display text-[28px] leading-none font-semibold">
+          {week.minutes}
+          <span className="text-base text-ink-muted"> min</span>
+        </p>
+        <p className="mt-1.5 text-sm text-ink-muted">studied this week</p>
       </Card>
     </div>
+  );
+}
+
+function LastTakeaway() {
+  const sessions = useSessions();
+  const last = sessions?.find((s) => s.status === "finished" && s.takeaway);
+  if (!last) return null;
+  return (
+    <Card>
+      <CardHeader
+        eyebrow="Your last takeaway"
+        action={<Quote className="size-5 text-lavender" strokeWidth={1.6} aria-hidden />}
+      />
+      <p className="font-display text-lg leading-snug text-ink-soft italic">“{last.takeaway}”</p>
+      <p className="mt-2 text-xs text-ink-subtle">
+        Your Leak Book rules will resurface here once hand reviews arrive (Phase 2).
+      </p>
+    </Card>
   );
 }

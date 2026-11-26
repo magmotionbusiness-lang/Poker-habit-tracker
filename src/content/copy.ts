@@ -46,6 +46,16 @@ export const copy = {
       body: "Goals, streaks and your weekly report card live here.",
     },
   },
+  stats: {
+    sample: {
+      none: "No finished sessions match these filters yet.",
+      tiny: "Only {n} sessions — this tells you very little yet.",
+      small: "Small sample ({n} sessions): treat it as a hint, not a verdict.",
+      ok: null,
+    },
+    ratingInsight:
+      "Your {worst}-game sessions {worstVerb} {worstRate}/hr; {best}-game sessions {bestVerb} {bestRate}/hr.",
+  },
   install: {
     title: "Add Stakers to your Home Screen",
     body: "Reminders and offline logging work best from the Home Screen app.",

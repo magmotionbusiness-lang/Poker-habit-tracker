@@ -57,7 +57,6 @@ export function useEuroRates(): EuroRates {
 export function useRates(currencies: readonly string[]): Record<string, string> {
   const euro = useEuroRates();
   const key = [...new Set(currencies)].sort().join(",");
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => pairRates(euro, key ? key.split(",") : []), [euro, key]);
 }
 

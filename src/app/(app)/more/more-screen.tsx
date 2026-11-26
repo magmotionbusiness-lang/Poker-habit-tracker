@@ -3,7 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
+  Bell,
+  Database,
   FileText,
+  Flame,
   HeartHandshake,
   Info,
   LogIn,
@@ -26,6 +29,9 @@ import { brand } from "@/config/brand";
 import { isProductionDeployment } from "@/lib/env";
 import { useAppStore } from "@/lib/store/app-store";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { wipeLocalData } from "@/lib/db/repo";
+import { useSyncStatus } from "@/lib/db/sync-status";
+import { useSettings } from "@/lib/db/hooks";
 
 const CURRENCIES = ["USD", "EUR", "GBP", "HUF", "CAD", "AUD"] as const;
 
@@ -34,9 +40,13 @@ export function MoreScreen() {
   const { mode, prefs, setPrefs, reset } = useAppStore();
   const [installOpen, setInstallOpen] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const sync = useSyncStatus();
+  const settings = useSettings();
 
   async function signOut() {
     await getSupabaseBrowserClient()?.auth.signOut();
+    // Account data stays in the cloud; this device forgets it.
+    await wipeLocalData();
     reset();
     toast("Signed out");
     router.replace("/");
@@ -55,12 +65,51 @@ export function MoreScreen() {
         />
       </ListGroup>
 
+      <ListGroup title="Your system">
+        <ListRow
+          href="/more/habits"
+          icon={<Flame />}
+          label="Habits & streak"
+          detail="Targets, rest days, commitment"
+        />
+        <ListRow
+          href="/more/notifications"
+          icon={<Bell />}
+          label="Reminders"
+          detail="Daily nudge & quiet hours"
+        />
+        <ListRow
+          href="/more/data"
+          icon={<Database />}
+          label="Data & sync"
+          detail={
+            mode === "account"
+              ? sync.state === "error"
+                ? "Sync problem — tap for details"
+                : "Export, backup status, demo data"
+              : "Export, demo data"
+          }
+        />
+      </ListGroup>
+
+      {settings?.uts && (
+        <p className="-mt-2 px-1 text-sm text-lavender">
+          UTS {settings.uts.status} · Pro
+          {settings.uts.proUntil
+            ? ` until ${new Date(settings.uts.proUntil).toLocaleDateString()}`
+            : ""}
+        </p>
+      )}
+      {settings?.utsCodeError && (
+        <p className="-mt-2 px-1 text-sm text-danger">{settings.utsCodeError}</p>
+      )}
+
       <ListGroup title="Account">
         {mode === "account" ? (
           <ListRow
             icon={<LogOut />}
             label="Sign out"
-            detail="Your data stays backed up"
+            detail="Backed up in your account; this device is cleared"
             onClick={signOut}
           />
         ) : (
