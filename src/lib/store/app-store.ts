@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { ALL_CURRENCIES } from "@/lib/money/currencies";
 
 /**
  * Device-level app state. Guest mode lives entirely in this store (and, from Phase 1,
@@ -16,6 +17,8 @@ export type Prefs = {
   displayMode: DisplayMode;
   fourColorDeck: boolean;
   haptics: boolean;
+  /** Sound effects (taps, chips, celebrations). */
+  sound: boolean;
 };
 
 type AppState = {
@@ -32,27 +35,6 @@ type AppState = {
 export function detectCurrency(locale?: string): string {
   const loc = locale ?? (typeof navigator !== "undefined" ? navigator.language : "en-US");
   const region = loc.split("-")[1]?.toUpperCase();
-  const byRegion: Record<string, string> = {
-    US: "USD",
-    GB: "GBP",
-    CA: "CAD",
-    AU: "AUD",
-    NZ: "NZD",
-    HU: "HUF",
-    CH: "CHF",
-    SE: "SEK",
-    NO: "NOK",
-    DK: "DKK",
-    PL: "PLN",
-    CZ: "CZK",
-    JP: "JPY",
-    IN: "INR",
-    BR: "BRL",
-    MX: "MXN",
-    SG: "SGD",
-    HK: "HKD",
-    ZA: "ZAR",
-  };
   const euro = [
     "AT",
     "BE",
@@ -75,8 +57,19 @@ export function detectCurrency(locale?: string): string {
     "SI",
     "SK",
   ];
-  if (region && euro.includes(region)) return "EUR";
-  return (region && byRegion[region]) || "USD";
+  if (!region) return "USD";
+  if (euro.includes(region)) return "EUR";
+  const shared: Record<string, string> = {
+    SN: "XOF",
+    CI: "XOF",
+    CM: "XAF",
+    PF: "XPF",
+    EC: "USD",
+    SV: "USD",
+    PA: "USD",
+  };
+  // ISO 4217 codes start with the issuing country's code (US→USD, NG→NGN, JP→JPY).
+  return shared[region] ?? ALL_CURRENCIES.find((c) => c.startsWith(region)) ?? "USD";
 }
 
 const initialPrefs: Prefs = {
@@ -84,6 +77,7 @@ const initialPrefs: Prefs = {
   displayMode: "money",
   fourColorDeck: false,
   haptics: true,
+  sound: true,
 };
 
 export const useAppStore = create<AppState>()(
@@ -106,8 +100,13 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: "stakers.app.v1",
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => localStorage),
+      // v2 adds prefs.sound (defaults on for existing users).
+      migrate: (persisted: unknown) => {
+        const p = persisted as { prefs?: Partial<Prefs> } & Record<string, unknown>;
+        return { ...p, prefs: { ...initialPrefs, ...(p.prefs ?? {}) } } as never;
+      },
       partialize: (s) => ({
         mode: s.mode,
         onboardingDone: s.onboardingDone,

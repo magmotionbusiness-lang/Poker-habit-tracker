@@ -20,7 +20,7 @@ import { toast } from "@/components/ui/toaster";
 import { sectionEmojis, userTags } from "@/content/hands";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db/db";
-import { useRunningSession } from "@/lib/db/hooks";
+import { useHand, useRunningSession } from "@/lib/db/hooks";
 import { errorMessage } from "@/lib/errors";
 import {
   createCollection,
@@ -30,6 +30,7 @@ import {
   updateHand,
 } from "@/lib/hands/actions";
 import { haptic } from "@/lib/haptics";
+import { play } from "@/lib/sfx/sfx";
 import type { Card as PokerCard } from "@/lib/poker/cards";
 import { act, foldTo, replay, settle } from "@/lib/poker/engine";
 import { holeCardCount, type Game, type HandHistory } from "@/lib/poker/hand-types";
@@ -134,6 +135,16 @@ function FullHand({ sessionId, fromNote }: { sessionId: string | null; fromNote:
   const [heroCards, setHeroCards] = useState<PokerCard[]>([]);
   const [hand, setHand] = useState<HandHistory | null>(null);
   const [overrides, setOverrides] = useState<Record<number, { name?: string; stack?: number }>>({});
+  // Expanding a quick hand: start from its cards and position.
+  const fromHand = useHand(fromNote);
+  const [prefilled, setPrefilled] = useState(false);
+  if (!prefilled && fromHand?.hero_cards) {
+    setPrefilled(true);
+    setHeroCards(fromHand.hero_cards.match(/.{2}/g) ?? []);
+    if (fromHand.hero_position && positionNames(setup.tableSize).includes(fromHand.hero_position)) {
+      setSetup({ ...setup, heroPosition: fromHand.hero_position });
+    }
+  }
 
   if (!hand) {
     return (
@@ -461,6 +472,7 @@ function PlayStep({
               setHand({ ...hand, board: [...hand.board, ...boardPick] });
               setBoardPick([]);
               haptic();
+              play("deal");
             }}
           >
             Deal {nextStreetName}
@@ -668,6 +680,7 @@ function FinishStep({
             });
             const final = await updateHand(saved, { user_tags: tags, collection_ids: sectionIds });
             haptic([10, 30, 10]);
+            play("save");
             toast.success("Hand saved. Review it while it's fresh.");
             onSaved(final.id);
           } catch (e) {

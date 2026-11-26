@@ -23,7 +23,7 @@ export const smartLists = [
   { key: "all-in", label: "All-ins" },
   { key: "mistakes", label: "Marked as mistakes" },
   { key: "starred", label: "Starred" },
-  { key: "notes", label: "Quick notes to finish" },
+  { key: "notes", label: "To finish" },
 ] as const;
 
 export const sectionEmojis = ["📌", "🎯", "🔥", "🧠", "❓", "💎", "🧊", "📚", "⚠️", "🏆"];

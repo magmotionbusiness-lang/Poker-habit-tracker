@@ -28,6 +28,7 @@ import {
   toggleInCollection,
   updateHand,
 } from "@/lib/hands/actions";
+import { expressBoard } from "@/lib/hands/express";
 import { haptic } from "@/lib/haptics";
 import { useAppStore } from "@/lib/store/app-store";
 
@@ -141,11 +142,39 @@ function View({ hand }: { hand: Hand }) {
         )}
       </header>
 
+      {!hand.ohh && expressBoard(hand).length > 0 && (
+        <Card className="flex flex-col items-center gap-2">
+          <p className="eyebrow">Board</p>
+          <div className="flex gap-1.5">
+            {expressBoard(hand).map((c) => (
+              <PlayingCard key={c} card={c} size="sm" fourColor={prefs.fourColorDeck} />
+            ))}
+          </div>
+          <p className="text-xs text-ink-muted">
+            {hand.auto_tags
+              .filter((t) => ["limped", "srp", "3bet", "4bet+", "multiway"].includes(t))
+              .map((t) =>
+                t === "srp"
+                  ? "Raised pot"
+                  : t === "3bet"
+                    ? "3-bet pot"
+                    : t === "4bet+"
+                      ? "4-bet+ pot"
+                      : t[0]!.toUpperCase() + t.slice(1),
+              )
+              .join(" · ")}
+          </p>
+        </Card>
+      )}
+
       {hand.quick_note && (
         <Card className="flex gap-3">
           <NotebookPen className="mt-0.5 size-5 shrink-0 text-lavender" aria-hidden />
           <div className="flex-1">
-            <p className="text-ink">{hand.quick_note}</p>
+            <p className="text-ink">
+              {hand.quick_note.replace(/ · Board: .*$/, "").replace(/^Board: .*$/, "") ||
+                "Quick hand"}
+            </p>
             {!hand.ohh && (
               <Button className="mt-3" size="sm" asChild>
                 <Link href={`/hands/new?from=${hand.id}`}>Log it as a full hand</Link>

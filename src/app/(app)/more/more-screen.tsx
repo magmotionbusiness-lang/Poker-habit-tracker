@@ -17,6 +17,7 @@ import {
   Sparkles,
   UserRound,
 } from "lucide-react";
+import { CurrencySelect } from "@/components/forms/currency-select";
 import { PageHeader } from "@/components/shell/page-header";
 import { InstallPrompt } from "@/components/shell/install-prompt";
 import { Dialog } from "@/components/ui/dialog";
@@ -32,8 +33,6 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { wipeLocalData } from "@/lib/db/repo";
 import { useSyncStatus } from "@/lib/db/sync-status";
 import { useSettings } from "@/lib/db/hooks";
-
-const CURRENCIES = ["USD", "EUR", "GBP", "HUF", "CAD", "AUD"] as const;
 
 export function MoreScreen() {
   const router = useRouter();
@@ -141,22 +140,13 @@ export function MoreScreen() {
             className="w-full"
           />
         </div>
-        <div className="space-y-3 px-4 py-4">
-          <label htmlFor="currency" className="block text-sm font-medium text-ink-soft">
-            Default currency
-          </label>
-          <select
+        <div className="px-4 py-4">
+          <CurrencySelect
             id="currency"
+            label="Default currency"
             value={prefs.currency}
-            onChange={(e) => setPrefs({ currency: e.target.value })}
-            className="h-11 w-full rounded-md border border-line bg-field px-3 text-[16px] text-ink"
-          >
-            {Array.from(new Set([prefs.currency, ...CURRENCIES])).map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+            onChange={(c) => setPrefs({ currency: c })}
+          />
         </div>
         <ListRow
           label="Four-colour deck"

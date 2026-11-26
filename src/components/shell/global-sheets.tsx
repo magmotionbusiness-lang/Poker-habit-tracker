@@ -1,5 +1,6 @@
 "use client";
 
+import { ExpressSheet } from "@/components/hands/express-sheet";
 import { StartSessionSheet } from "@/components/sessions/start-session-sheet";
 import { StudySheet } from "@/components/sessions/study-sheet";
 import { BankrollSheet, TransactionSheet } from "@/components/sessions/transaction-sheet";
@@ -12,6 +13,7 @@ export function GlobalSheets() {
       <StudySheet />
       <TransactionSheet />
       <BankrollSheet />
+      <ExpressSheet />
     </>
   );
 }

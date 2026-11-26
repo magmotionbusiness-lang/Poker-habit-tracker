@@ -9,6 +9,10 @@ describe("detectCurrency", () => {
     ["en-IE", "EUR"],
     ["en-GB", "GBP"],
     ["en", "USD"],
-    ["fr-SN", "USD"],
+    ["fr-SN", "XOF"],
+    ["en-NG", "NGN"],
+    ["ja-JP", "JPY"],
+    ["es-AR", "ARS"],
+    ["xx-ZZ", "USD"],
   ])("%s → %s", (loc, ccy) => expect(detectCurrency(loc)).toBe(ccy));
 });

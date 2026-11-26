@@ -5,23 +5,47 @@
  */
 export type EuroRates = Record<string, number>; // EUR → X (EUR itself = 1)
 
-const ENDPOINTS = ["https://api.frankfurter.app/latest", "https://api.frankfurter.dev/v1/latest"];
+const ECB_ENDPOINTS = [
+  "https://api.frankfurter.app/latest",
+  "https://api.frankfurter.dev/v1/latest",
+];
+/** Covers ~160 currencies (incl. the ones the ECB doesn't publish). Free, no key. */
+const WORLD_ENDPOINT = "https://open.er-api.com/v6/latest/EUR";
 
+/**
+ * EUR-based rates: official ECB reference rates where available, topped up with a
+ * world-currency source for everything else (HUF is ECB; e.g. NGN, ARS, VND are not).
+ */
 export async function fetchEuroRates(
   fetchImpl: typeof fetch = fetch,
 ): Promise<{ day: string; rates: EuroRates }> {
-  let lastErr: unknown;
-  for (const url of ENDPOINTS) {
+  let ecb: { day: string; rates: EuroRates } | null = null;
+  for (const url of ECB_ENDPOINTS) {
     try {
       const res = await fetchImpl(url, { cache: "no-store" });
       if (!res.ok) throw new Error(`${res.status}`);
       const json = (await res.json()) as { date: string; rates: Record<string, number> };
-      return { day: json.date, rates: { EUR: 1, ...json.rates } };
-    } catch (e) {
-      lastErr = e;
+      ecb = { day: json.date, rates: { EUR: 1, ...json.rates } };
+      break;
+    } catch {
+      /* try the next one */
     }
   }
-  throw lastErr instanceof Error ? lastErr : new Error("FX unavailable");
+  let world: EuroRates = {};
+  try {
+    const res = await fetchImpl(WORLD_ENDPOINT, { cache: "no-store" });
+    if (res.ok) {
+      const json = (await res.json()) as { result?: string; rates?: Record<string, number> };
+      if (json.result === "success" && json.rates) world = json.rates;
+    }
+  } catch {
+    /* optional */
+  }
+  if (!ecb && !Object.keys(world).length) throw new Error("FX unavailable");
+  return {
+    day: ecb?.day ?? new Date().toISOString().slice(0, 10),
+    rates: { ...world, ...(ecb?.rates ?? {}), EUR: 1 },
+  };
 }
 
 /** Cross rate A→B from EUR-based rates, as a 10-dp decimal string (null if unknown). */

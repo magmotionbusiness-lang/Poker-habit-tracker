@@ -3,7 +3,16 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
-import { BookMarked, FolderPlus, NotebookPen, Pencil, Plus, Search, Spade } from "lucide-react";
+import {
+  BookMarked,
+  FolderPlus,
+  LayoutGrid,
+  NotebookPen,
+  Pencil,
+  Plus,
+  Search,
+  Spade,
+} from "lucide-react";
 import { HandRow } from "@/components/hands/hand-row";
 import { PageHeader } from "@/components/shell/page-header";
 import { Button } from "@/components/ui/button";
@@ -22,6 +31,7 @@ import { createCollection, deleteCollection, updateCollection } from "@/lib/hand
 import { inCollection, searchHands, smartList, type SmartListKey } from "@/lib/hands/lists";
 import { useAppStore } from "@/lib/store/app-store";
 import { cn } from "@/lib/utils";
+import { useUi } from "@/lib/store/ui-store";
 
 type View = { kind: "smart"; key: SmartListKey } | { kind: "section"; id: string };
 
@@ -34,6 +44,7 @@ export function HandsScreen() {
   const [query, setQuery] = useState("");
   const [limit, setLimit] = useState(40);
   const [sheet, setSheet] = useState<"new" | HandCollection | null>(null);
+  const openSheet = useUi((s) => s.open);
 
   const view: View = params.get("section")
     ? { kind: "section", id: params.get("section")! }
@@ -87,10 +98,13 @@ export function HandsScreen() {
                 <BookMarked />
               </Link>
             </Button>
-            <Button size="sm" asChild>
+            <Button size="icon-sm" variant="secondary" aria-label="Full hand on the table" asChild>
               <Link href="/hands/new">
-                <Plus aria-hidden /> Log hand
+                <LayoutGrid />
               </Link>
+            </Button>
+            <Button size="sm" onClick={() => openSheet("express-hand")}>
+              <Plus aria-hidden /> Log hand
             </Button>
           </div>
         }

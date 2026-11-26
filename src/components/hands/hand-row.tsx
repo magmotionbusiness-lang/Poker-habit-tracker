@@ -44,7 +44,7 @@ export function HandRow({
       href={`/hands/view?id=${hand.id}`}
       className="flex min-h-[64px] items-center gap-3 px-4 py-2.5 hover:bg-white/[0.03]"
     >
-      {hand.source === "quick_note" ? (
+      {hand.source === "quick_note" && !hand.hero_cards ? (
         <span className="grid h-[34px] w-[52px] place-items-center rounded-md bg-pill text-lavender">
           <NotebookPen className="size-4" aria-hidden />
         </span>
@@ -60,7 +60,7 @@ export function HandRow({
       )}
       <span className="min-w-0 flex-1">
         <span className="block truncate font-medium">
-          {hand.source === "quick_note" ? hand.quick_note : detail || hand.game}
+          {hand.source === "quick_note" && !hand.hero_cards ? hand.quick_note : detail || hand.game}
         </span>
         <span className="flex items-center gap-1.5 text-xs text-ink-muted">
           <ReviewDot status={hand.review_status} />

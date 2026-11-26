@@ -14,16 +14,27 @@ describe("fx", () => {
     const m = pairRates(rates, ["USD", "EUR"]);
     expect(Object.keys(m).sort()).toEqual(["EUR:USD", "USD:EUR"]);
   });
-  it("falls back to the second endpoint", async () => {
-    let calls = 0;
-    const fake = (async () => {
-      calls++;
-      if (calls === 1) throw new Error("down");
-      return new Response(JSON.stringify({ date: "2026-11-26", rates: { USD: 1.05 } }));
+  it("falls back to the second ECB endpoint and tops up with world rates", async () => {
+    const fake = (async (url: string) => {
+      if (url.includes("frankfurter.app")) throw new Error("down");
+      if (url.includes("frankfurter.dev"))
+        return new Response(JSON.stringify({ date: "2026-11-26", rates: { USD: 1.05 } }));
+      return new Response(
+        JSON.stringify({ result: "success", rates: { USD: 1.04, NGN: 1650, VND: 27000 } }),
+      );
     }) as unknown as typeof fetch;
-    await expect(fetchEuroRates(fake)).resolves.toEqual({
-      day: "2026-11-26",
-      rates: { EUR: 1, USD: 1.05 },
-    });
+    const r = await fetchEuroRates(fake);
+    expect(r.day).toBe("2026-11-26");
+    expect(r.rates.USD).toBe(1.05); // ECB wins where both exist
+    expect(r.rates.NGN).toBe(1650);
+    expect(r.rates.EUR).toBe(1);
+  });
+
+  it("works with only the world source", async () => {
+    const fake = (async (url: string) => {
+      if (url.includes("frankfurter")) throw new Error("down");
+      return new Response(JSON.stringify({ result: "success", rates: { ARS: 1100 } }));
+    }) as unknown as typeof fetch;
+    expect((await fetchEuroRates(fake)).rates.ARS).toBe(1100);
   });
 });

@@ -54,6 +54,7 @@ export function LiveSession() {
 
 function Running({ session }: { session: PokerSession }) {
   const router = useRouter();
+  const openSheet = useUi((s) => s.open);
   const now = useNow(1000);
   const updates = useStackUpdates(session.id) ?? [];
   const venues = useVenues() ?? [];
@@ -159,10 +160,8 @@ function Running({ session }: { session: PokerSession }) {
         >
           {paused ? <Play aria-hidden /> : <Pause aria-hidden />} {paused ? "Resume" : "Pause"}
         </Button>
-        <Button variant="secondary" asChild>
-          <Link href={`/hands/new?session=${session.id}`}>
-            <NotebookPen aria-hidden /> Log hand
-          </Link>
+        <Button variant="secondary" onClick={() => openSheet("express-hand")}>
+          <NotebookPen aria-hidden /> Log hand
         </Button>
       </div>
       <Button

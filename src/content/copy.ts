@@ -24,7 +24,7 @@ export const copy = {
     title: "Add",
     startSession: { label: "Start session", hint: "Live timer, stack updates, quick hands" },
     logSession: { label: "Log finished session", hint: "Result, duration, how you played" },
-    logHand: { label: "Log a hand", hint: "Fast entry or a quick note for later" },
+    logHand: { label: "Log a hand", hint: "10 seconds between hands — or the full table" },
     logStudy: { label: "Log study", hint: "Minutes and what you worked on" },
     transaction: { label: "Add transaction", hint: "Deposit, withdrawal or transfer" },
   },

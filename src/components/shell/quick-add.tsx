@@ -38,9 +38,7 @@ export function QuickAdd() {
       case "transaction":
         return ui.open("transaction");
       case "logHand":
-        return toast("Hand logging arrives in Phase 2", {
-          description: "Fast entry, quick notes and the replayer.",
-        });
+        return ui.open("express-hand");
     }
   }
   return (
