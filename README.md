@@ -30,17 +30,34 @@ pnpm dev                      # http://localhost:3000
 | `pnpm icons`               | Regenerate PWA icons + iOS splash screens from the mark                     |
 | `scripts/verify-schema.sh` | Apply migrations to a throwaway Postgres and run the RLS checks             |
 
-## Routes (Phase 0)
+## Routes
 
-| Route                                             |                                                                                 |
-| ------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `/`                                               | Welcome — start as guest or sign in                                             |
-| `/today` `/bankroll` `/hands` `/progress` `/more` | App shell with bottom tabs + floating “+” quick-add                             |
-| `/more/up-the-stakes`                             | Up The Stakes hub preview (cohort phases)                                       |
-| `/login`                                          | Email code / magic link + Google                                                |
-| `/design`                                         | Design-system showcase — development & Vercel previews only (404 in production) |
-| `/auth/callback`                                  | Supabase auth landing (magic link + OAuth)                                      |
-| `/legal/*`, `/offline`                            | Legal templates, offline fallback                                               |
+| Route                                                        |                                                                                     |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `/`                                                          | Welcome — start as guest or sign in                                                 |
+| `/onboarding`                                                | 8 steps: formats, stakes & currency, bankroll, goal, habits, reminders, code, email |
+| `/today`                                                     | Habit loop, streak, main goal, live-session banner, this week                       |
+| `/bankroll`                                                  | Balance/results graph, filtered stats, A/B/C insight, monthly, win/loss calendar    |
+| `/session`                                                   | Live session: timer, stack updates, chip graph, pause, stop-loss, cool-down         |
+| `/sessions/edit` (`?id=`)                                    | Log or edit a finished session                                                      |
+| `/progress`                                                  | Goals (pace & projection), streak, heatmap, weekly report card                      |
+| `/more`, `/more/habits`, `/more/notifications`, `/more/data` | Settings, habits & streak rules, reminders, export/demo/sync                        |
+| `/more/up-the-stakes`                                        | Up The Stakes hub preview (cohort phases)                                           |
+| `/hands`                                                     | Phase 2                                                                             |
+| `/login`                                                     | Email code / magic link + Google                                                    |
+| `/design`                                                    | Design-system showcase — dev & Vercel previews only (404 in production)             |
+| `/auth/callback`                                             | Supabase auth landing (magic link + OAuth)                                          |
+| `/api/push/subscribe`, `/api/push/test`                      | Save a device's push subscription / send a test (signed-in users)                   |
+| `/api/cron/reminders`                                        | Daily reminder job (needs `CRON_SECRET`)                                            |
+| `/legal/*`, `/offline`                                       | Legal templates, offline fallback                                                   |
+
+## How data works
+
+Local-first: everything you log is written to **IndexedDB on the device** first (instant, works
+offline). Each write also lands in an **outbox** in the same transaction. When signed in, a
+background sync pushes the outbox to Supabase (rows carry client-generated UUIDs, so retries never
+duplicate) and pulls changes from other devices. Guest data uploads on first sign-in. Details:
+`src/lib/db/*` and `DECISIONS.md → Phase 1`.
 
 ## Deploying to Vercel (one-time setup)
 
@@ -79,10 +96,25 @@ Screen. (Push reminders on iOS 16.4+ only work from the Home Screen app.)
    ```
 6. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in Vercel and redeploy.
 
+## Reminders (Web Push)
+
+1. Generate keys once: `npx web-push generate-vapid-keys`.
+2. In Vercel add `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
+   (`mailto:you@…`), `SUPABASE_SERVICE_ROLE_KEY` and a random `CRON_SECRET` (`openssl rand -hex 32`).
+3. Schedule the job. Vercel's free plan only runs cron once a day, so the repo includes a free
+   GitHub Actions schedule (`.github/workflows/reminders.yml`, every 15 min). In GitHub → Settings →
+   Secrets → Actions add `APP_URL` (your production URL) and `CRON_SECRET` (same value). Until those
+   exist the workflow skips itself. (Alternative: Supabase `pg_cron` + `pg_net`.)
+4. On iPhone: open the app from the Home Screen → More → Reminders → Turn on reminders → Send test.
+
+Each user gets at most one reminder per local day, after their chosen time, outside quiet hours,
+and only if today's habits aren't done.
+
 ## Environment variables
 
 See [`.env.example`](.env.example) — every variable is documented there and validated by Zod in
-`src/lib/env.ts`. Nothing is required for Phase 0.
+`src/lib/env.ts`. Nothing is required to run as a guest; Supabase keys turn on accounts & sync,
+VAPID keys + `CRON_SECRET` turn on reminders.
 
 ## Project layout
 

@@ -3,13 +3,17 @@
 All words Nelson may want to change live in a handful of files — no component code to touch.
 Edit on GitHub (pencil icon) → commit → Vercel redeploys in ~1 minute.
 
-| What                                                                                 | File                               |
-| ------------------------------------------------------------------------------------ | ---------------------------------- |
-| App name, tagline, coach name, site link, pillars, cohort size                       | `src/config/brand.ts`              |
-| Welcome screen, tab names, quick-add labels, empty states, install steps, 18+ notice | `src/content/copy.ts`              |
-| Cohort phases (Engine → Scaling): taglines, lessons, practicals, ™ tools             | `src/content/program.ts`           |
-| Legal templates (privacy, terms, responsible gaming)                                 | `src/app/legal/[slug]/page.tsx`    |
-| Brand assets (logo files)                                                            | `public/brand/` (see README there) |
+| What                                                                                  | File                               |
+| ------------------------------------------------------------------------------------- | ---------------------------------- |
+| App name, tagline, coach name, site link, pillars, cohort size                        | `src/config/brand.ts`              |
+| Welcome screen, tab names, quick-add labels, empty states, install steps, 18+ notice  | `src/content/copy.ts`              |
+| Cohort phases (Engine → Scaling): taglines, lessons, practicals, ™ tools              | `src/content/program.ts`           |
+| Onboarding: step titles, formats, stake suggestions, goal options, email consent text | `src/content/onboarding.ts`        |
+| Preset habits: names, hints, default targets, which are recommended                   | `src/content/habits.ts`            |
+| Stats wording: small-sample warnings, the “C-game vs A-game” insight sentence         | `src/content/copy.ts` → `stats`    |
+| Reminder notification text                                                            | `src/content/notifications.ts`     |
+| Legal templates (privacy, terms, responsible gaming)                                  | `src/app/legal/[slug]/page.tsx`    |
+| Brand assets (logo files)                                                             | `public/brand/` (see README there) |
 
 Coming in later phases (same principle — one file or an admin screen):
 
@@ -28,3 +32,5 @@ Never gambling hype (“win big”, “guaranteed profit”). Profit claims alwa
 - [ ] Use of “Up The Stakes™”, the ™ framework names and the logo inside the app
 - [ ] The default goal wording “Make my first $50k from poker”
 - [ ] Official logo files in `public/brand/`
+- [ ] Email opt-in consent text (`onboarding.ts → emailConsent`) — legal wording for the EU
+- [ ] Preset habit names and the reminder notification wording

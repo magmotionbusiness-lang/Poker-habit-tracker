@@ -116,8 +116,87 @@ above the tab bar (thumb zone), rather than a centre tab, so the five tabs stay 
 Placeholder “Stakers” mark = three rising steps (the stake ladder). Not the UTS logo — official
 Up The Stakes assets are TODO(nelson) in `public/brand/`.
 
+## Phase 1 — Core tracker MVP (2026-11-26)
+
+### Local-first data layer
+
+IndexedDB (Dexie) is the source of truth on the device; records mirror the Postgres columns
+(snake_case) so there's no mapping layer. Every write and its outbox entry share one IndexedDB
+transaction. Sync (`src/lib/db/sync.ts`): push collapses the outbox to the last op per row and
+upserts parents before children (deletes in reverse); pull merges remote rows unless the row has a
+pending local change; conflicts are last-write-wins by `updated_at`. Runs on sign-in, after writes
+(debounced 1.5s), on reconnect, on returning to the foreground and every minute.
+**Known limitation:** deletes don't propagate to _other_ devices yet (no tombstones). Phase 2 adds
+`deleted_at` soft deletes. Single-device use (the common case) is unaffected.
+
+### Screens render after hydration
+
+With Cache Components, client code can't read the clock during prerender. App screens depend on
+IndexedDB, the clock and the user's timezone anyway, so they're wrapped in `<ClientOnly>`: the
+static shell (tab bar, skeleton) prerenders and is cached by the service worker; the screen
+renders immediately after hydration. Every route stays static (no server rendering per visit).
+
+### Session maths
+
+`result = (cash_out + prize + bounties) − (buy_in + rebuys + fees)`; tips and expenses are
+tracked separately and subtracted for "net after costs" (used for the bankroll balance, hourly in
+Bankroll, and profit goals). bb/hr uses live cash sessions only; bb/100 uses sessions with a hand
+count. Std dev is the sample SD per session. Small samples are labelled (< 10 "tells you very
+little", < 30 "a hint, not a verdict"). Verified against a hand-calculated sheet in
+`stats.test.ts`.
+
+### Multiple currencies
+
+A session in another currency than its bankroll stores `fx_rate` (session → bankroll), pre-filled
+from the day's ECB rate (Frankfurter API, free, cached on device). Cross-bankroll totals in the
+display currency use the cached daily rate and are hidden when a rate is missing. Transfers are
+only allowed between bankrolls in the same currency.
+
+### Streak rules (as implemented)
+
+- A day counts when the user's commitment is met: at least 1 habit (default), all habits, or at least 2.
+- **Session-linked habits** (warm-up, cool-down, log every session, no alcohol) only apply on days you play.
+- Rest weekdays and days with nothing scheduled never break a streak; playing anyway still counts.
+- Freeze: earned per 7 counted days in the current streak, held up to 2 (Pro 5), auto-spent on a miss.
+- Repair: one per streak run. Miss a day with no freeze → double it the next day (every required
+  habit at ≥ 2× target; yes/no habits count as doubled when done). Until that day ends the streak
+  is shown "at risk", not broken.
+- The streak is _derived_ by replaying the logs (`computeStreak`), so it can't drift; `streak_state`
+  in the DB is only a cache for later server features (leaderboards).
+- Milestones are celebrated on the day they're reached (not days later).
+
+### Goals
+
+Profit goal = profit before tracking (`start_value`) + net results since the goal started.
+Bankroll goal = current total balance (progress = balance ÷ target, so the demo's $6,400 of $10k
+reads 64%). Projections need ≥ 7 days of history and a positive pace. Weekly/monthly targets from
+onboarding are one-off goals with a deadline (recurring goals later). Stake/custom goals are
+updated by hand.
+
+### Reminders
+
+Vercel Hobby crons run once a day, so `/api/cron/reminders` is built for an imprecise 15-minute
+scheduler (GitHub Actions, free): a reminder is due once the local reminder time has passed, it
+hasn't been sent today (`profiles.last_reminded_on`) and it isn't quiet hours. The server uses the
+same `dayInput` habit logic as the app to decide what's left. Push needs an account (the server
+must know the subscription); guests see a "create account" prompt. iOS needs the Home Screen app.
+
+### Onboarding details
+
+Default goal "Make my first $50k from poker" uses the user's currency with an editable amount
+(50,000 HUF isn't the same promise). The Up The Stakes code is stored and redeemed automatically
+on the first signed-in sync (`redeem_access_code`). The email opt-in (separate, unticked, consent
+text + timestamp stored) is kept on the device and sent to the email provider in Phase 3.
+
+### Demo player
+
+Deterministic generator (`src/lib/demo/demo.ts`, tested): ~3 months of live 1/2 & 1/3 sessions,
+whole-dollar results, A-games win and C-games lose (so insights look meaningful), a 23-day streak
+and a $10k bankroll goal at exactly 64%. Removable from More → Data & sync. Hands arrive in Phase 2.
+
 ## Open questions for Máté / Nelson
 
 - Final app name (Stakers?) and whether the app mark should carry the UTS logo.
 - Which email provider Nelson uses (Kit / Mailchimp / other) — adapter is picked by env var.
 - Approval of the program copy pulled from the site (`src/content/program.ts`) and of the Up The Stakes hub wording.
+- Reminder wording and default time (19:00) — `src/content/notifications.ts`.
