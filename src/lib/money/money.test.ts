@@ -114,3 +114,18 @@ describe("formatMoney", () => {
     expect(formatMoney(money(123456, "EUR"), { locale: "de-DE" })).toMatch(/1\.234,56\s€/);
   });
 });
+
+import { toDecimalString } from "./money";
+describe("toDecimalString", () => {
+  it.each([
+    [123456, "USD", "1234.56"],
+    [5, "USD", "0.05"],
+    [-205, "EUR", "-2.05"],
+    [0, "USD", "0.00"],
+    [5000, "JPY", "5000"],
+    [1234, "BHD", "1.234"],
+  ])("%i %s → %s", (minor, ccy, out) => {
+    expect(toDecimalString({ minor, currency: ccy })).toBe(out);
+    expect(parseMoney(out, ccy).minor).toBe(minor); // round-trips exactly
+  });
+});

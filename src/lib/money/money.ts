@@ -204,3 +204,15 @@ export function isProfit(m: Money): boolean {
 export function isLoss(m: Money): boolean {
   return m.minor < 0;
 }
+
+/** Exact decimal string for exports/inputs: 123456 USD → "1234.56", −5 JPY → "-5". */
+export function toDecimalString(amount: Money): string {
+  const exp = currencyExponent(amount.currency);
+  const neg = amount.minor < 0;
+  const digits = Math.abs(amount.minor)
+    .toString()
+    .padStart(exp + 1, "0");
+  const int = exp ? digits.slice(0, -exp) : digits;
+  const frac = exp ? `.${digits.slice(-exp)}` : "";
+  return `${neg ? "-" : ""}${int}${frac}`;
+}
