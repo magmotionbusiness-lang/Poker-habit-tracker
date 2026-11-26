@@ -2,10 +2,10 @@
  * Hand-written (no Workbox) to stay compatible with Turbopack builds. See DECISIONS.md → "PWA".
  * Bump VERSION when the caching logic changes; hashed /_next/static assets never need it.
  */
-const VERSION = "v1";
+const VERSION = "v2";
 const SHELL_CACHE = `stakers-shell-${VERSION}`;
 const ASSET_CACHE = `stakers-assets-${VERSION}`;
-const SHELL_ROUTES = ["/", "/today", "/bankroll", "/hands", "/progress", "/more", "/offline"];
+const SHELL_ROUTES = ["/", "/today", "/bankroll", "/hands", "/progress", "/more", "/session", "/sessions/edit", "/onboarding", "/more/habits", "/more/data", "/more/notifications", "/offline"];
 const OFFLINE_URL = "/offline";
 
 self.addEventListener("install", (event) => {

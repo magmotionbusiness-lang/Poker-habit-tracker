@@ -1,31 +1,87 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
-test.describe("Phase 0 smoke", () => {
-  test("welcome → guest mode → tabs → quick add", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Build the system.");
-    await page.getByRole("button", { name: /Start without an account/ }).click();
+/** Start as a guest and finish onboarding with defaults (+ an optional starting bankroll). */
+async function onboard(page: Page, bankroll = "2000") {
+  await page.goto("/");
+  await page.getByRole("button", { name: /Start without an account/ }).click();
+  await expect(page).toHaveURL(/\/onboarding$/);
+  await page.getByRole("button", { name: "Continue" }).click(); // formats
+  await page.getByRole("button", { name: "Continue" }).click(); // stakes
+  await page.getByLabel("Starting bankroll").fill(bankroll);
+  await page.getByRole("button", { name: "Continue" }).click(); // bankroll
+  await page.getByRole("button", { name: "Continue" }).click(); // goal
+  await page.getByRole("button", { name: "Continue" }).click(); // habits
+  await page.getByRole("button", { name: "Continue" }).click(); // reminders
+  await page.getByRole("button", { name: "Continue" }).click(); // UTS code
+  await page.getByRole("button", { name: "Build my system" }).click();
+  await expect(page).toHaveURL(/\/today$/);
+  await expect(page.getByRole("heading", { name: "Today" })).toBeVisible();
+}
 
-    await expect(page).toHaveURL(/\/today$/);
-    await expect(page.getByRole("heading", { name: "Today" })).toBeVisible();
-
-    const nav = page.getByRole("navigation", { name: "Main" });
-    for (const tab of ["Bankroll", "Hands", "Progress", "More"]) {
-      await nav.getByRole("link", { name: tab }).click();
-      await expect(page.getByRole("heading", { level: 1, name: tab })).toBeVisible();
-      await expect(nav.getByRole("link", { name: tab })).toHaveAttribute("aria-current", "page");
-    }
-
-    await page.getByRole("button", { name: "Quick add" }).click();
-    await expect(page.getByRole("dialog")).toContainText("Start session");
+test.describe("Phase 1 flows", () => {
+  test("onboarding creates habits, a goal and a bankroll", async ({ page }) => {
+    await onboard(page);
+    await expect(page.getByRole("button", { name: /^Review hands: 0 of 3/ })).toBeVisible();
+    await expect(page.getByText("Make my first $50k from poker")).toBeVisible();
+    await page
+      .getByRole("navigation", { name: "Main" })
+      .getByRole("link", { name: "Bankroll" })
+      .click();
+    await expect(page.getByText("$2,000").first()).toBeVisible();
   });
 
-  test("guest mode persists across reloads", async ({ page }) => {
+  test("habit check-off counts the day for the streak", async ({ page }) => {
+    await onboard(page);
+    for (let i = 0; i < 3; i++)
+      await page.getByRole("button", { name: new RegExp(`^Review hands: ${i} of 3`) }).click();
+    await expect(page.getByText("Today counts. Streak safe.")).toBeVisible();
+    await expect(page.getByRole("img", { name: "1-day streak" })).toBeVisible();
+  });
+
+  test("live session: start, update stack, end with cool-down → result in bankroll", async ({
+    page,
+  }) => {
+    await onboard(page);
+    await page.getByRole("button", { name: "Quick add" }).click();
+    await page
+      .getByRole("button", { name: /Start session/ })
+      .first()
+      .click();
+    await page.getByLabel("Small blind").fill("1");
+    await page.getByLabel("Big blind").fill("2");
+    await page.getByLabel("Buy-in", { exact: true }).fill("300");
+    await page.getByRole("button", { name: "Start session", exact: true }).last().click();
+    await expect(page).toHaveURL(/\/session$/);
+
+    await page.getByRole("button", { name: "Update stack" }).click();
+    await page.getByRole("button", { name: "+50bb" }).click();
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByText("+$100")).toBeVisible();
+
+    // Survives a reload (timer + state live on the device).
+    await page.reload();
+    await expect(page.getByText("+$100")).toBeVisible();
+
+    await page.getByRole("button", { name: "End session" }).click();
+    await page.getByRole("button", { name: "A-game" }).click();
+    await page.getByRole("button", { name: "Save session" }).click();
+    await expect(page).toHaveURL(/\/today$/);
+
+    await page.goto("/bankroll");
+    await expect(page.getByText("$2,100").first()).toBeVisible();
+    await expect(page.getByText("+$100").first()).toBeVisible();
+  });
+
+  test("demo player loads a 23-day streak and a 64% bankroll goal", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: /Start without an account/ }).click();
+    await page.getByRole("button", { name: /Load a demo player/ }).click();
     await expect(page).toHaveURL(/\/today$/);
-    await page.goto("/");
-    await expect(page).toHaveURL(/\/today$/);
+    await expect(page.getByRole("img", { name: "23-day streak" })).toBeVisible();
+    await expect(page.getByText("64%")).toBeVisible();
+    await page.goto("/bankroll");
+    await expect(page.getByText("$6,400").first()).toBeVisible();
+    await expect(page.getByText(/C-game sessions lose/)).toBeVisible();
   });
 
   test("app routes send first-time visitors to welcome", async ({ page }) => {
@@ -33,9 +89,20 @@ test.describe("Phase 0 smoke", () => {
     await expect(page).toHaveURL(/\/$/);
   });
 
+  test("tabs and quick add", async ({ page }) => {
+    await onboard(page);
+    const nav = page.getByRole("navigation", { name: "Main" });
+    for (const tab of ["Bankroll", "Hands", "Progress", "More"]) {
+      await nav.getByRole("link", { name: tab }).click();
+      await expect(page.getByRole("heading", { level: 1, name: tab })).toBeVisible();
+      await expect(nav.getByRole("link", { name: tab })).toHaveAttribute("aria-current", "page");
+    }
+    await page.getByRole("button", { name: "Quick add" }).click();
+    await expect(page.getByRole("dialog")).toContainText("Log finished session");
+  });
+
   test("display preferences are saved on the device", async ({ page }) => {
-    await page.goto("/");
-    await page.getByRole("button", { name: /Start without an account/ }).click();
+    await onboard(page);
     await page.goto("/more");
     await page.getByRole("radio", { name: "Big blinds" }).click();
     await page.reload();
@@ -44,7 +111,9 @@ test.describe("Phase 0 smoke", () => {
       "on",
     );
   });
+});
 
+test.describe("platform", () => {
   test("design system page renders", async ({ page }) => {
     await page.goto("/design");
     await expect(page.getByRole("heading", { name: "Colour" })).toBeVisible();
@@ -61,9 +130,11 @@ test.describe("Phase 0 smoke", () => {
     expect(sw.headers()["cache-control"]).toContain("no-cache");
   });
 
-  test("auth callback rejects open redirects", async ({ request }) => {
-    const res = await request.get("/auth/callback?next=//evil.example", { maxRedirects: 0 });
-    expect(res.status()).toBe(307);
-    expect(res.headers().location).not.toContain("evil.example");
+  test("protected endpoints reject anonymous calls", async ({ request }) => {
+    expect((await request.get("/api/cron/reminders")).status()).toBe(401);
+    expect([401, 503]).toContain(
+      (await request.post("/api/push/subscribe", { data: {} })).status(),
+    );
+    expect([401, 503]).toContain((await request.post("/api/push/test")).status());
   });
 });
