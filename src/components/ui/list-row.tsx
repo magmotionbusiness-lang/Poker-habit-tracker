@@ -70,7 +70,7 @@ export function ListGroup({ title, children }: { title?: string; children: React
   return (
     <section className="space-y-2">
       {title && <h2 className="eyebrow px-1 !font-sans">{title}</h2>}
-      <div className="stagger divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
+      <div className="stagger divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface/80">
         {children}
       </div>
     </section>

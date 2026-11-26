@@ -5,7 +5,7 @@ export function Card({ className, glow, ...props }: ComponentProps<"div"> & { gl
   return (
     <div
       className={cn(
-        "relative rounded-lg border border-line bg-surface p-4 shadow-card",
+        "relative rounded-lg border border-line bg-surface/80 p-4 shadow-card",
         glow &&
           "border-line-accent before:pointer-events-none before:absolute before:-inset-px before:-z-10 before:rounded-[inherit] before:bg-[radial-gradient(ellipse_at_top_left,rgba(124,92,255,0.35),transparent_60%)] before:blur-xl",
         className,

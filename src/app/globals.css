@@ -122,7 +122,8 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    background: var(--canvas);
+    /* Transparent so the ambient layer (z-index -1) shows; <html> keeps the canvas colour. */
+    background: transparent;
     color: var(--ink);
     font-family: var(--font-sans);
     font-size: 16px;
@@ -176,9 +177,12 @@
   }
   /* Soft radial violet glow behind hero areas (site: .video background) */
   .hero-glow {
-    background:
-      radial-gradient(ellipse 70% 45% at 50% 0%, rgba(124, 92, 255, 0.2) 0%, transparent 65%),
-      var(--canvas);
+    /* Transparent base: the ambient background shows through. */
+    background: radial-gradient(
+      ellipse 70% 45% at 50% 0%,
+      rgba(124, 92, 255, 0.2) 0%,
+      transparent 65%
+    );
   }
   .num {
     font-variant-numeric: tabular-nums;
@@ -704,4 +708,235 @@ html[data-motion="gentle"][data-intro="play"] nav[aria-label="Main"] {
 }
 .area-in {
   animation: fade-in 1200ms ease 600ms backwards;
+}
+
+/* ---------- Ambient background (components/shell/ambient-background.tsx) ---------- */
+@property --amb-1 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #7c5cff;
+}
+@property --amb-2 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #3b2bbf;
+}
+@property --amb-3 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #c04dff;
+}
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(180deg, #0a0918 0%, var(--canvas) 55%, #05050b 100%);
+  transition:
+    --amb-1 1.4s ease,
+    --amb-2 1.4s ease,
+    --amb-3 1.4s ease;
+}
+/* One colour story per tab. */
+.ambient[data-scene="today"] {
+  --amb-1: #7c5cff;
+  --amb-2: #c04dff;
+  --amb-3: #3b6bff;
+}
+.ambient[data-scene="bankroll"] {
+  --amb-1: #6b5cff;
+  --amb-2: #1fbf8f;
+  --amb-3: #2f7dff;
+}
+.ambient[data-scene="hands"] {
+  --amb-1: #4f5cff;
+  --amb-2: #19b5d6;
+  --amb-3: #8a4dff;
+}
+.ambient[data-scene="progress"] {
+  --amb-1: #7c5cff;
+  --amb-2: #f0a830;
+  --amb-3: #d94dff;
+}
+.ambient[data-scene="more"],
+.ambient[data-scene="welcome"] {
+  --amb-1: #7c5cff;
+  --amb-2: #5a3bff;
+  --amb-3: #b05cff;
+}
+.ambient-aurora {
+  position: absolute;
+  width: 95vmax;
+  height: 95vmax;
+  border-radius: 9999px;
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+.ambient-a {
+  top: -42vmax;
+  left: -32vmax;
+  opacity: 0.85;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--amb-1) 60%, transparent) 0%,
+    transparent 60%
+  );
+  animation: amb-drift-a 26s ease-in-out infinite alternate;
+}
+.ambient-b {
+  top: 14%;
+  right: -52vmax;
+  opacity: 0.6;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--amb-2) 55%, transparent) 0%,
+    transparent 58%
+  );
+  animation: amb-drift-b 34s ease-in-out infinite alternate;
+}
+.ambient-c {
+  bottom: -55vmax;
+  left: -12vmax;
+  opacity: 0.65;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--amb-3) 50%, transparent) 0%,
+    transparent 60%
+  );
+  animation: amb-drift-c 40s ease-in-out infinite alternate;
+}
+@keyframes amb-drift-a {
+  to {
+    transform: translate(22vw, 14vh) scale(1.15);
+  }
+}
+@keyframes amb-drift-b {
+  to {
+    transform: translate(-26vw, 18vh) scale(0.9);
+  }
+}
+@keyframes amb-drift-c {
+  to {
+    transform: translate(18vw, -16vh) scale(1.2);
+  }
+}
+.ambient-rays {
+  position: absolute;
+  left: 50%;
+  top: -60vmax;
+  width: 140vmax;
+  height: 140vmax;
+  margin-left: -70vmax;
+  opacity: 0.22;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    color-mix(in srgb, var(--amb-1) 70%, transparent) 18deg,
+    transparent 40deg,
+    transparent 120deg,
+    color-mix(in srgb, var(--amb-3) 60%, transparent) 140deg,
+    transparent 165deg,
+    transparent 230deg,
+    color-mix(in srgb, var(--amb-2) 60%, transparent) 250deg,
+    transparent 275deg
+  );
+  mask-image: radial-gradient(circle, #000 0%, transparent 62%);
+  -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 62%);
+  animation: spin 90s linear infinite;
+  will-change: transform;
+}
+[data-motion="gentle"] .ambient-rays {
+  animation: none;
+}
+.ambient-suits {
+  position: absolute;
+  inset: -160px;
+  opacity: 0.06;
+  background-size: 160px 160px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cg fill='white' font-family='Georgia,serif' font-size='22'%3E%3Ctext x='12' y='34'%3E%E2%99%A0%3C/text%3E%3Ctext x='92' y='66'%3E%E2%99%A5%3C/text%3E%3Ctext x='40' y='118'%3E%E2%99%A6%3C/text%3E%3Ctext x='118' y='148'%3E%E2%99%A3%3C/text%3E%3C/g%3E%3C/svg%3E");
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 15%, #000 0%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 15%, #000 0%, transparent 80%);
+  animation: suits-drift 60s linear infinite;
+  will-change: transform;
+}
+@keyframes suits-drift {
+  to {
+    transform: translate(160px, 160px);
+  }
+}
+.ambient-sparks span {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 9999px;
+  background: #e5ddff;
+  box-shadow:
+    0 0 6px 1px color-mix(in srgb, var(--amb-1) 80%, transparent),
+    0 0 14px 2px color-mix(in srgb, var(--amb-2) 45%, transparent);
+  opacity: 0;
+  animation: spark-rise 16s linear infinite;
+  will-change: transform, opacity;
+}
+@keyframes spark-rise {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.6);
+  }
+  15% {
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate(10px, -22vh) scale(1);
+  }
+  85% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-8px, -45vh) scale(0.5);
+  }
+}
+.ambient-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.ambient-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 120% 90% at 50% 35%,
+    transparent 45%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+}
+/* Gentle: the glows breathe in place, sparkles twinkle, nothing drifts. */
+[data-motion="gentle"] .ambient-aurora {
+  animation: amb-breathe 9s ease-in-out infinite alternate;
+}
+[data-motion="gentle"] .ambient-suits {
+  animation: none;
+}
+[data-motion="gentle"] .ambient-sparks span {
+  animation-name: spark-twinkle;
+}
+@keyframes amb-breathe {
+  from {
+    filter: brightness(0.75);
+  }
+  to {
+    filter: brightness(1.15);
+  }
+}
+@keyframes spark-twinkle {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.8;
+  }
 }

@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Celebrations } from "@/components/fx/celebrations";
 import { Intro } from "@/components/shell/intro";
 import { MotionSync } from "@/components/shell/motion-sync";
+import { AmbientBackground } from "@/components/shell/ambient-background";
 import { SoundSync } from "@/components/shell/sound-sync";
 import { AuthSync } from "@/components/shell/auth-sync";
 import { ServiceWorkerRegister } from "@/components/shell/sw-register";
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${fraunces.variable} ${jakarta.variable}`} suppressHydrationWarning>
       <body className="min-h-dvh">
+        <AmbientBackground />
         <Intro />
         <MotionSync>{children}</MotionSync>
         <Celebrations />

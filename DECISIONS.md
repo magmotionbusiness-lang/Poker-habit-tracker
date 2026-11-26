@@ -335,3 +335,12 @@ hydration. Screens glide in via `app/(app)/template.tsx` (sections rise one afte
 - Which email provider Nelson uses (Kit / Mailchimp / other) — adapter is picked by env var.
 - Approval of the program copy pulled from the site (`src/content/program.ts`) and of the Up The Stakes hub wording.
 - Reminder wording and default time (19:00) — `src/content/notifications.ts`.
+
+### Ambient background
+
+`components/shell/ambient-background.tsx`: a fixed layer behind everything with drifting aurora
+glows (colour story per tab: Today violet/magenta, Bankroll emerald, Hands cyan, Progress gold),
+a slow light sweep, a faint drifting pattern of card suits, rising sparkles and film grain.
+CSS-only (transform/opacity, no blur filters) to stay smooth on iPhone; tab colours cross-fade
+via `@property`. `<body>` is transparent (`<html>` keeps the canvas colour) and cards are 80%
+opaque so the glow shows through. Gentle motion: glows breathe in place, sparkles twinkle.
