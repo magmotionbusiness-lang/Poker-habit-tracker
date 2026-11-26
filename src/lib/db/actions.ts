@@ -408,3 +408,11 @@ export async function saveGoal(
 export const deleteGoal = (id: string) => deleteRows("goals", [id]);
 
 export type { TransactionType };
+
+/** Tick a preset habit (warm-up, cool-down, …) for today if the user tracks it. */
+export async function completeHabitByKey(key: string, date: ISODate): Promise<boolean> {
+  const habit = (await db().habits.toArray()).find((h) => h.key === key && h.active);
+  if (!habit) return false;
+  await setHabitValue(habit.id, date, Math.max(1, habit.target_value || 1));
+  return true;
+}

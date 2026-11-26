@@ -37,19 +37,20 @@ pnpm dev                      # http://localhost:3000
 | ------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
 | `/`                                                          | Welcome — start as guest or sign in                                                 |
 | `/onboarding`                                                | 8 steps: formats, stakes & currency, bankroll, goal, habits, reminders, code, email |
-| `/today`                                                     | Habit loop, streak, main goal, live-session banner, this week                       |
+| `/today`                                                     | Habits, streak, goal, Daily Hand, weekly focus, announcements, nudges               |
 | `/bankroll`                                                  | Balance/results graph, filtered stats, A/B/C insight, monthly, win/loss calendar    |
 | `/session`                                                   | Live session: timer, stack updates, chip graph, pause, stop-loss, cool-down         |
 | `/sessions/edit` (`?id=`)                                    | Log or edit a finished session                                                      |
-| `/progress`                                                  | Goals (pace & projection), streak, heatmap, weekly report card                      |
-| `/more`, `/more/habits`, `/more/notifications`, `/more/data` | Settings, habits & streak rules, reminders, export/demo/sync                        |
-| `/more/up-the-stakes`                                        | Up The Stakes hub preview (cohort phases)                                           |
-| `/hands`                                                     | Phase 2                                                                             |
+| `/progress`                                                  | Streak, stake ladder, “what’s working”, heatmap, weekly review, goals, share cards  |
+| `/more`, `/more/habits`, `/more/notifications`, `/more/data` | Settings, habits & streak rules, reminders, CSV import/export, demo, sync           |
+| `/more/up-the-stakes`                                        | Up The Stakes hub: cohort phases, countdowns, waitlist + newsletter                 |
+| `/hands`, `/hands/new`, `/hands/view`, `/hands/leaks`        | Hand journal: express log, table entry, replayer, reviews, Leak Book                |
 | `/login`                                                     | Email code / magic link + Google                                                    |
 | `/design`                                                    | Design-system showcase — dev & Vercel previews only (404 in production)             |
 | `/auth/callback`                                             | Supabase auth landing (magic link + OAuth)                                          |
 | `/api/push/subscribe`, `/api/push/test`                      | Save a device's push subscription / send a test (signed-in users)                   |
 | `/api/cron/reminders`                                        | Daily reminder job (needs `CRON_SECRET`)                                            |
+| `/api/leads`                                                 | Waitlist/newsletter signup → `leads` + email provider (`EMAIL_PROVIDER`)            |
 | `/legal/*`, `/offline`                                       | Legal templates, offline fallback                                                   |
 
 ## How data works
@@ -115,7 +116,8 @@ and only if today's habits aren't done.
 
 See [`.env.example`](.env.example) — every variable is documented there and validated by Zod in
 `src/lib/env.ts`. Nothing is required to run as a guest; Supabase keys turn on accounts & sync,
-VAPID keys + `CRON_SECRET` turn on reminders.
+VAPID keys + `CRON_SECRET` turn on reminders; `SUPABASE_SERVICE_ROLE_KEY` stores leads and
+`EMAIL_PROVIDER` (+ Kit / Mailchimp / webhook keys) sends them to Nelson's email list.
 
 ## Project layout
 

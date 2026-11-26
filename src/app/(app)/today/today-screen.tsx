@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import {
   BookOpen,
   ChevronRight,
   Inbox,
   Play,
   Quote,
+  Share2,
   ShieldCheck,
   Sparkles,
   Timer,
@@ -17,6 +18,11 @@ import { GoalCard } from "@/components/goals/goal-card";
 import { formatClock, formatDuration } from "@/components/sessions/timer";
 import { InstallPrompt } from "@/components/shell/install-prompt";
 import { PageHeader } from "@/components/shell/page-header";
+import { AnnouncementSlot } from "@/components/uts/announcements";
+import { ShareSheet } from "@/components/share/share-sheet";
+import { DailyHandCard } from "@/components/today/daily-hand-card";
+import { WeeklyFocus } from "@/components/today/weekly-focus";
+import { NudgeCard } from "@/components/today/nudge-card";
 import { HabitRingButton } from "@/components/today/habit-ring-button";
 import { TodayHero } from "@/components/today/today-hero";
 import { FireOnMount } from "@/components/fx/fire-on-mount";
@@ -67,6 +73,7 @@ export function TodayScreen() {
   const open = useUi((s) => s.open);
   const dismissed = useAppStore((s) => s.dismissed);
   const dismiss = useAppStore((s) => s.dismiss);
+  const [sharing, setSharing] = useState(false);
 
   if (!engine) {
     return (
@@ -188,7 +195,11 @@ export function TodayScreen() {
       )}
 
       <ThisWeek today={today} tz={engine.tz} />
+      <WeeklyFocus today={today} />
       <LastTakeaway today={today} />
+      <DailyHandCard />
+      <AnnouncementSlot />
+      <NudgeCard today={today} tz={engine.tz} streak={streak.current} />
 
       {milestone && milestoneKey && !dismissed[milestoneKey] && (
         <Dialog
@@ -211,8 +222,18 @@ export function TodayScreen() {
             >
               <Sparkles aria-hidden /> Keep going
             </Button>
+            <Button block variant="outline" onClick={() => setSharing(true)}>
+              <Share2 aria-hidden /> Share it
+            </Button>
           </div>
         </Dialog>
+      )}
+      {sharing && (
+        <ShareSheet
+          open
+          onClose={() => setSharing(false)}
+          subject={{ kind: "streak", days: streak.current, longest: streak.longest }}
+        />
       )}
     </div>
   );

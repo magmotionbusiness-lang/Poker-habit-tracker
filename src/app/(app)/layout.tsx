@@ -2,6 +2,7 @@ import { AppGuard } from "@/components/shell/app-guard";
 import { BottomNav } from "@/components/shell/bottom-nav";
 import { ClientOnly } from "@/components/shell/client-only";
 import { GlobalSheets } from "@/components/shell/global-sheets";
+import { GrowthSync } from "@/components/shell/growth-sync";
 import { QuickAdd } from "@/components/shell/quick-add";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -34,6 +35,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
       <ClientOnly>
         <QuickAdd />
         <GlobalSheets />
+        <GrowthSync />
       </ClientOnly>
       <BottomNav />
     </>

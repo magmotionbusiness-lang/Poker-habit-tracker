@@ -107,3 +107,29 @@ export function deviceTimeZone(): string {
     return "UTC";
   }
 }
+
+/** UTC instant for a wall-clock date + "HH:MM" in a time zone (DST-safe, two-pass). */
+export function zonedToUtc(date: ISODate, time: string, tz: string): Date {
+  const [y, mo, d] = date.split("-").map(Number) as [number, number, number];
+  const [h, mi] = time.split(":").map(Number) as [number, number];
+  const wall = Date.UTC(y, mo - 1, d, h, mi);
+  const offset = (at: number) => {
+    const p = Object.fromEntries(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: tz,
+        hourCycle: "h23",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+        .formatToParts(at)
+        .map((x) => [x.type, x.value]),
+    );
+    return Date.UTC(+p.year!, +p.month! - 1, +p.day!, +p.hour!, +p.minute!) - at;
+  };
+  let t = wall - offset(wall);
+  t = wall - offset(t);
+  return new Date(t);
+}

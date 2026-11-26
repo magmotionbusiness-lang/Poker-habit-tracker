@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Zap } from "lucide-react";
+import { ChevronDown, Flame, Zap } from "lucide-react";
+import { Chips, RatingPicker } from "@/components/forms/chips";
 import { MoneyInput } from "@/components/forms/money-input";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
@@ -10,8 +11,10 @@ import { Sheet } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/components/ui/toaster";
 import { errorMessage } from "@/lib/errors";
-import { saveShortcut, startSession, upsertVenue } from "@/lib/db/actions";
-import { useBankrolls, useShortcuts, useVenues } from "@/lib/db/hooks";
+import { completeHabitByKey, saveShortcut, startSession, upsertVenue } from "@/lib/db/actions";
+import { useBankrolls, useRules, useShortcuts, useToday, useVenues } from "@/lib/db/hooks";
+import { play } from "@/lib/sfx/sfx";
+import { warmUp } from "@/content/routines";
 import type { SessionShortcut } from "@/lib/domain/types";
 import { stakesLabel } from "@/lib/stats/session-math";
 import { useAppStore } from "@/lib/store/app-store";
@@ -48,6 +51,16 @@ export function StartSessionSheet() {
   const [saveAs, setSaveAs] = useState(false);
   const [label, setLabel] = useState("");
   const [busy, setBusy] = useState(false);
+  const [warm, setWarm] = useState(false);
+  const [focusPoint, setFocusPoint] = useState("");
+  const [energy, setEnergy] = useState<number | null>(null);
+  const [sleep, setSleep] = useState<number | null>(null);
+  const { today } = useToday();
+  const openRules = (useRules() ?? [])
+    .filter((r) => r.status === "working")
+    .sort((a, b) => b.times_seen - a.times_seen)
+    .slice(0, 3);
+  const warmedUp = Boolean(focusPoint.trim()) && energy !== null;
   const set = (p: Partial<SessionDraft>) => setDraft((d) => ({ ...d, ...p }));
   if (open && draft.bankroll_id === null && first)
     set({ bankroll_id: first.id, currency: first.currency });
@@ -65,7 +78,11 @@ export function StartSessionSheet() {
         bankroll_id: rest.bankroll_id ?? first?.id ?? null,
         stop_loss_minor: stopLoss,
         max_length_min: maxHours ? Math.round(Number(maxHours) * 60) : null,
+        focus_point: focusPoint.trim() || null,
+        energy_rating: energy,
+        sleep_rating: sleep,
       });
+      const warmed = warmedUp && (await completeHabitByKey("warm_up", today));
       if (saveAs && !shortcutLabel) {
         const { venue_name: _v, ...presetRest } = { ...draft };
         void _v;
@@ -76,9 +93,13 @@ export function StartSessionSheet() {
       }
       close();
       setDraft(blank());
+      setFocusPoint("");
+      setEnergy(null);
+      setSleep(null);
+      play(warmed ? "complete" : "deal");
       router.push("/session");
       toast(
-        `Session started${shortcutLabel ? ` · ${shortcutLabel}` : ""}. Good luck — play your A-game.`,
+        `Session started${shortcutLabel ? ` · ${shortcutLabel}` : ""}. ${warmed ? warmUp.doneToast : warmUp.startToast}`,
       );
     } catch (e) {
       toast.error(errorMessage(e, "Couldn't start the session"));
@@ -150,6 +171,70 @@ export function StartSessionSheet() {
               onChange={(e) => setMaxHours(e.target.value.replace(/[^\d.]/g, ""))}
             />
           </div>
+        </div>
+        <div className="overflow-hidden rounded-lg border border-line-accent bg-surface">
+          <button
+            type="button"
+            onClick={() => setWarm((w) => !w)}
+            aria-expanded={warm}
+            className="flex w-full items-center gap-3 px-4 py-3 text-left"
+          >
+            <span className="grid size-9 place-items-center rounded-full bg-pill text-lavender">
+              <Flame className="size-4" aria-hidden />
+            </span>
+            <span className="flex-1">
+              <span className="block text-sm font-semibold">{warmUp.title}</span>
+              <span className="block text-xs text-ink-muted">
+                {warmedUp ? "Ready. Counts for your warm-up habit." : warmUp.subtitle}
+              </span>
+            </span>
+            <ChevronDown
+              className={`size-4 text-ink-muted transition-transform ${warm ? "rotate-180" : ""}`}
+              aria-hidden
+            />
+          </button>
+          {warm && (
+            <div className="space-y-4 border-t border-line px-4 py-4">
+              <div>
+                <Label htmlFor="focus-point">{warmUp.focusLabel}</Label>
+                {openRules.length > 0 && (
+                  <div className="mb-2">
+                    <Chips
+                      ariaLabel="Focus from your Leak Book"
+                      options={openRules.map((r) => ({ value: r.text, label: r.text }))}
+                      value={focusPoint}
+                      onChange={(v) => setFocusPoint(String(v))}
+                    />
+                  </div>
+                )}
+                <Input
+                  id="focus-point"
+                  placeholder={warmUp.focusPlaceholder}
+                  value={focusPoint}
+                  onChange={(e) => setFocusPoint(e.target.value)}
+                />
+              </div>
+              <RatingPicker
+                label="Energy"
+                low="Drained"
+                high="Sharp"
+                value={energy}
+                onChange={setEnergy}
+              />
+              <RatingPicker
+                label="Sleep last night"
+                low="Bad"
+                high="Great"
+                value={sleep}
+                onChange={setSleep}
+              />
+              {energy !== null && energy <= 2 && (
+                <p className="rounded-md bg-gold/10 px-3 py-2 text-sm text-gold">
+                  {warmUp.lowEnergy}
+                </p>
+              )}
+            </div>
+          )}
         </div>
         <div className="flex items-center justify-between rounded-lg border border-line bg-surface px-4 py-3">
           <span className="text-sm font-medium">Save as shortcut</span>

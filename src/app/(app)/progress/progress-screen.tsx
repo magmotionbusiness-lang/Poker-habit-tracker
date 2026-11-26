@@ -1,11 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Pencil, Plus, Snowflake, Trophy } from "lucide-react";
+import { Pencil, Plus, Share2, Snowflake, Trophy } from "lucide-react";
+import { ShareSheet } from "@/components/share/share-sheet";
 import { StreakFlame } from "@/components/brand/streak-flame";
 import { Heatmap } from "@/components/charts/heatmap";
 import { CountUp } from "@/components/fx/count-up";
 import { MilestoneBadges } from "@/components/progress/milestone-badges";
+import { StakeLadder } from "@/components/progress/stake-ladder";
+import { WhatsWorking } from "@/components/progress/whats-working";
+import { WeeklyReviewSheet } from "@/components/progress/weekly-review-sheet";
+import { weeklyReview } from "@/content/weekly-review";
+import { useSettings } from "@/lib/db/hooks";
 import { FireOnMount } from "@/components/fx/fire-on-mount";
 import { Dialog } from "@/components/ui/dialog";
 import { ProgressBar } from "@/components/ui/progress";
@@ -34,6 +40,7 @@ export function ProgressScreen() {
   const [editing, setEditing] = useState<Goal | null | "new">(null);
   const dismissed = useAppStore((s) => s.dismissed);
   const dismiss = useAppStore((s) => s.dismiss);
+  const [sharing, setSharing] = useState(false);
 
   if (!engine || !goals) {
     return (
@@ -56,7 +63,23 @@ export function ProgressScreen() {
     <div className="space-y-4">
       <PageHeader eyebrow="Consistency" title="Progress" />
 
-      <Card glow className="overflow-hidden">
+      <Card glow className="relative overflow-hidden">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="absolute top-3 right-3"
+          aria-label="Share your streak"
+          onClick={() => setSharing(true)}
+        >
+          <Share2 aria-hidden />
+        </Button>
+        {sharing && (
+          <ShareSheet
+            open
+            onClose={() => setSharing(false)}
+            subject={{ kind: "streak", days: streak.current, longest: streak.longest }}
+          />
+        )}
         <div className="flex items-center gap-4">
           <div className="grid size-24 shrink-0 place-items-center rounded-full bg-[radial-gradient(circle,rgba(124,92,255,0.45),transparent_70%)]">
             <StreakFlame count={streak.current} size="lg" hideCount />
@@ -119,6 +142,10 @@ export function ProgressScreen() {
           />
         </dl>
       </Card>
+
+      <StakeLadder />
+
+      <WhatsWorking />
 
       <Card>
         <CardHeader
@@ -266,6 +293,8 @@ function WeekReport({ today, tz }: { today: string; tz: string }) {
   const hands = useHands();
   const rules = useRules();
   const currency = useAppStore((s) => s.prefs.currency);
+  const settings = useSettings();
+  const [reviewing, setReviewing] = useState(false);
   const weeks = useMemo(() => {
     if (!sessions || !study || !hands || !rules) return null;
     const inRange = (iso: string | null | undefined, from: string, to: string) =>
@@ -295,7 +324,9 @@ function WeekReport({ today, tz }: { today: string; tz: string }) {
     const thisFrom = startOfWeek(today);
     return { now: calc(thisFrom, today), prev: calc(addDays(thisFrom, -7), addDays(thisFrom, -1)) };
   }, [sessions, study, hands, rules, today, tz, currency]);
-  if (!weeks) return null;
+  if (!weeks || !settings) return null;
+  const week = startOfWeek(today);
+  const reviewed = Boolean(settings.weeklyReviews[week]);
   const money = (m: number, signed = true) =>
     formatMoney({ minor: m, currency }, { signed, trimZeroCents: true });
   const rows: Array<[string, string, string]> = [
@@ -312,7 +343,7 @@ function WeekReport({ today, tz }: { today: string; tz: string }) {
     ["Rules written", String(weeks.now.rulesWritten), String(weeks.prev.rulesWritten)],
   ];
   return (
-    <Card>
+    <Card id="weekly-review" className="scroll-mt-20">
       <CardHeader eyebrow="Weekly report card" />
       <table className="num w-full text-sm">
         <thead>
@@ -334,6 +365,29 @@ function WeekReport({ today, tz }: { today: string; tz: string }) {
           ))}
         </tbody>
       </table>
+      <Button
+        className="mt-4"
+        block
+        variant={reviewed ? "outline" : "primary"}
+        onClick={() => setReviewing(true)}
+      >
+        {reviewed ? weeklyReview.edit : weeklyReview.cta}
+      </Button>
+      {reviewing && (
+        <WeeklyReviewSheet
+          open
+          onClose={() => setReviewing(false)}
+          week={week}
+          settings={settings}
+          summary={
+            <p className="rounded-md bg-field px-3 py-2.5 text-sm text-ink-soft">
+              {weeks.now.count} sessions · {formatDuration(weeks.now.ms)} ·{" "}
+              <span className="num font-semibold">{money(weeks.now.net)}</span> ·{" "}
+              {weeks.now.minutes} min study · {weeks.now.reviewed} hands reviewed
+            </p>
+          }
+        />
+      )}
     </Card>
   );
 }

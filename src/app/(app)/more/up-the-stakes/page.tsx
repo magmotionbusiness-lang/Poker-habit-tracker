@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Headline } from "@/components/brand/headline";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { brand } from "@/config/brand";
 import { program } from "@/content/program";
+import { UtsHubLive } from "@/components/uts/uts-hub";
 
 export const metadata: Metadata = { title: brand.coach.business };
 
-/** Phase 0 preview of the Up The Stakes hub (full version: Phase 3). */
+/** Up The Stakes hub: about the cohort, announcements, waitlist + newsletter (Phase 3). */
 export default function UpTheStakesPage() {
   return (
     <div className="space-y-8 pt-3">
@@ -62,18 +62,7 @@ export default function UpTheStakesPage() {
         </ol>
       </section>
 
-      <Card glow className="text-center">
-        <p className="eyebrow">Secure your spot</p>
-        <p className="mt-2 font-display text-2xl font-semibold">Join the waitlist</p>
-        <p className="mt-2 text-sm text-ink-muted">
-          In-app signup arrives in Phase 3. For now, join on the website.
-        </p>
-        <Button className="mt-5" block asChild>
-          <a href={brand.coach.site} target="_blank" rel="noopener noreferrer">
-            Open upthestakes.net <ArrowUpRight aria-hidden />
-          </a>
-        </Button>
-      </Card>
+      <UtsHubLive />
     </div>
   );
 }

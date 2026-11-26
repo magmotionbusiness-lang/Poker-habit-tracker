@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useState } from "react";
-import { ArrowLeft, Cloud, Database, Download, FileJson, Sparkles } from "lucide-react";
+import { ArrowLeft, Cloud, Database, Download, FileJson, FileUp, Sparkles } from "lucide-react";
+import { CsvImportSheet } from "@/components/sessions/csv-import-sheet";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
@@ -17,6 +18,7 @@ import { downloadText, sessionsCsv, transactionsCsv } from "@/lib/export/export"
 import { useAppStore } from "@/lib/store/app-store";
 
 export function DataScreen() {
+  const [importing, setImporting] = useState(false);
   const mode = useAppStore((s) => s.mode);
   const sync = useSyncStatus();
   const pending = useOutboxCount();
@@ -106,6 +108,16 @@ export function DataScreen() {
           )}
         </div>
       </Card>
+
+      <ListGroup title="Import">
+        <ListRow
+          icon={<FileUp />}
+          label="Sessions from CSV"
+          detail="Any spreadsheet or tracker export — you match the columns"
+          onClick={() => setImporting(true)}
+        />
+      </ListGroup>
+      {importing && <CsvImportSheet open onClose={() => setImporting(false)} />}
 
       <ListGroup title="Export">
         <ListRow

@@ -236,7 +236,77 @@ A `tombstones` table filled by delete triggers lets other devices apply deletes 
 ### Not yet (planned)
 
 Online hand-history import (PokerStars/GG via `@poker-apprentice/hand-history-parser`, Web Worker),
-all-in equity, opponent notes, public share links and the image share card.
+all-in equity, opponent notes and public share links. (The image share card shipped in Phase 3.)
+
+## Phase 3 — Up The Stakes layer & growth (2026-11-26)
+
+### Stake ladder (signature feature)
+
+`src/lib/ladder` is pure and tested. Three ladders (live cash, online cash, MTT), three presets
+(conservative / standard / aggressive) plus a fully custom rule (buy-ins, shot-taking line,
+move-down line; cash and MTT separately). "You play" = median stake of your last 10 sessions on
+that ladder. Rung amounts are written in exponent-2 units and scaled for other currencies, so
+"1/2" means 1/2 in any currency. Moving up a rung fires the milestone celebration once (the
+highest celebrated rung is stored per ladder in settings).
+
+### Where the new per-user state lives
+
+Ladder rule, Daily Hand answers (last 90 days), weekly reviews (last 26 weeks) and nudge /
+announcement dismissals live in `profiles.settings` (jsonb), so they sync with no new tables or
+migration. The `daily_hand_answers` table stays for the admin-authored Daily Hand (leaderboards).
+
+### Routines
+
+Warm-up = an optional section of Start session: focus point (one tap from your open Leak Book
+rules), energy and sleep check-in. A focus + energy ticks the "Pre-session warm-up" habit. The
+cool-down already existed in End session (A/B/C, tilt, focus followed, takeaway).
+
+### Leads, consent and email providers
+
+`POST /api/leads`: zod validation, honeypot (`company`), 5 requests / 10 min per IP (in-memory
+per instance — upgrade to KV if abused), and the consent text must match the server's copy in
+`src/content/uts.ts` exactly; it is stored with its timestamp in `leads`. The lead is then sent to
+the adapter chosen by `EMAIL_PROVIDER` (Kit v3 form subscribe · Mailchimp upsert as **pending**
+= double opt-in · webhook POST). Provider failures don't fail the user: the row keeps
+`provider_error` for a retry/export. With neither Supabase nor a provider configured the endpoint
+answers 503 and the form links to upthestakes.net. The onboarding opt-in is sent once online.
+UTM: first touch, stored on the device, sent with every lead.
+
+### Announcements & nudges
+
+Published rows from `announcements` (anon-readable, cached on device) + `src/content/announcements.ts`.
+Sample announcements only appear while demo data is loaded, so real users never see invented dates.
+Nudges: at most one a week, shown for a day, dismissible forever, and promo nudges are never
+shown to students/alumni; a losing week gets a mindset nudge, not a pitch.
+
+### Daily Hand
+
+30 placeholder spots in `src/content/daily-hands.ts`, all `approved: false` and labelled
+"Sample spot · pending review by Nelson". Same spot for everyone on a given day; its own streak.
+
+### Insights ("What's working")
+
+Cash sessions only, hourly per group, ≥3 sessions per group; dimensions: A/B/C game, stake,
+venue, length, weekday, time of day, warm-up focus, sleep, tilt. Ranked by the gap between best
+and worst group. Framed as "patterns, not proof".
+
+### CSV import
+
+Any CSV (comma / semicolon / tab, quoted fields). Columns are auto-matched by header and can be
+re-mapped; date order (31/12, 12/31, ISO) is detected. Profit-only rows are supported. Rows with
+the same start time and amounts as an existing session are skipped, so re-importing is safe.
+Imported sessions are tagged `imported`.
+
+### Share cards
+
+Rendered on a canvas at 1080×1920 (story) or 1080×1350 (post), shared with the Web Share API
+(or saved). "Hide amounts" removes every figure, including amounts inside goal titles. The
+"Tracked with Stakers · by Up The Stakes" mark is always on (removing it is a Pro option, Phase 5).
+
+### Not yet in Phase 3 (next)
+
+Admin panel (announcements, Daily Hand approval, access codes, lead export, broadcast push),
+announcement push offsets, cohort-specific audiences.
 
 ## Open questions for Máté / Nelson
 
