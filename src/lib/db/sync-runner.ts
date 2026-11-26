@@ -2,7 +2,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { onLocalWrite } from "./repo";
-import { pull, push, syncSettings } from "./sync";
+import { pull, push, redeemPendingCode, syncSettings } from "./sync";
 import { useSyncStatus } from "./sync-status";
 
 /**
@@ -30,6 +30,7 @@ export function startSync(client: SupabaseClient, userId: string): () => void {
       await syncSettings(client, userId);
       await push(client, userId);
       await pull(client);
+      await redeemPendingCode(client);
       status({ state: "idle", lastSyncedAt: new Date().toISOString(), error: null });
     } catch (e) {
       status({ state: "error", error: e instanceof Error ? e.message : String(e) });

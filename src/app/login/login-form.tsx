@@ -110,7 +110,7 @@ export function LoginForm() {
             variant="secondary"
             onClick={() => {
               setMode("guest");
-              router.push("/today");
+              router.push("/onboarding");
             }}
           >
             Continue as guest

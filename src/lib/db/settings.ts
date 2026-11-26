@@ -15,6 +15,9 @@ export type UserSettings = {
   onboardingDone: boolean;
   /** Up The Stakes access code entered in onboarding, redeemed once signed in (Phase 3 admin). */
   utsCode: string | null;
+  /** Result of redeeming utsCode on the server. */
+  uts: { status: "student" | "alumni"; proUntil: string | null } | null;
+  utsCodeError: string | null;
   /** Marketing opt-in captured with its exact consent text (GDPR). Sent to the email provider in Phase 3. */
   emailOptIn: { email: string; consent_text: string; consented_at: string; synced: boolean } | null;
   maxFreezes: number;
@@ -34,6 +37,8 @@ export function defaultSettings(): UserSettings {
     quietEnd: "08:00",
     onboardingDone: false,
     utsCode: null,
+    uts: null,
+    utsCodeError: null,
     emailOptIn: null,
     maxFreezes: 2,
     updated_at: new Date(0).toISOString(),

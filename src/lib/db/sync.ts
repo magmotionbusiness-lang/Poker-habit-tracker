@@ -177,3 +177,33 @@ export async function syncSettings(client: SupabaseClient, userId: string): Prom
     await d.meta.put({ key: "settingsDirty", value: false });
   }
 }
+
+const CODE_ERRORS: Record<string, string> = {
+  invalid_code: "That access code wasn't recognised.",
+  code_expired: "That access code has expired.",
+  code_used_up: "That access code has already been used.",
+  already_redeemed: "You've already redeemed that code.",
+};
+
+/** Redeem an Up The Stakes access code entered while signed out (onboarding). */
+export async function redeemPendingCode(client: SupabaseClient): Promise<void> {
+  const settings = await getSettings();
+  if (!settings.utsCode || settings.uts) return;
+  const { data, error } = await client.rpc("redeem_access_code", { p_code: settings.utsCode });
+  const { saveSettings } = await import("./repo");
+  if (error) {
+    await saveSettings({
+      utsCode: null,
+      utsCodeError: CODE_ERRORS[error.message] ?? "Couldn't redeem the access code.",
+    });
+    return;
+  }
+  const row = Array.isArray(data) ? data[0] : data;
+  await saveSettings({
+    uts: {
+      status: row?.uts_status === "alumni" ? "alumni" : "student",
+      proUntil: row?.pro_until ?? null,
+    },
+    utsCodeError: null,
+  });
+}

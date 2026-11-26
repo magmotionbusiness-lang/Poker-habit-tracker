@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Wordmark } from "@/components/brand/stakers-mark";
 import { Headline } from "@/components/brand/headline";
@@ -19,9 +19,11 @@ export function WelcomeScreen() {
   const mode = useAppStore((s) => s.mode);
   const setMode = useAppStore((s) => s.setMode);
   const reduce = useReducedMotion();
+  const starting = useRef(false);
 
+  // Returning users skip the welcome screen (but not while we're starting a new guest).
   useEffect(() => {
-    if (hydrated && mode !== null) router.replace("/today");
+    if (hydrated && mode !== null && !starting.current) router.replace("/today");
   }, [hydrated, mode, router]);
 
   const fade = (delay: number) =>
@@ -79,8 +81,9 @@ export function WelcomeScreen() {
             size="lg"
             block
             onClick={() => {
+              starting.current = true;
               setMode("guest");
-              router.push("/today");
+              router.push("/onboarding");
             }}
           >
             {copy.welcome.ctaGuest} <span aria-hidden>→</span>
