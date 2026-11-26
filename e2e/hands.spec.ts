@@ -9,6 +9,8 @@ async function tap(page: Page, loc: Locator) {
 
 /** Buttons inside a bottom sheet (its own scroll container, animating in). */
 async function tapInSheet(page: Page, loc: Locator) {
+  await expect(loc).toBeVisible();
+  await expect(loc).toBeEnabled();
   await page.waitForTimeout(400); // let the sheet finish sliding in
   await loc.evaluate((el) => (el as HTMLElement).click());
 }
