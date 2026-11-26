@@ -115,6 +115,7 @@ export type SessionShortcut = {
   >;
   sort_order: number;
   created_at: Timestamp;
+  updated_at: Timestamp;
 };
 
 export type HabitUnit = "count" | "minutes" | "boolean";

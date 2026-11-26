@@ -55,6 +55,30 @@ do $$ begin
 end $$;
 update public.profiles set display_name = 'Máté', default_currency = 'HUF' where id = '00000000-0000-0000-0000-00000000000a';
 
+-- Phase 1: users can store their own settings, but still not privileged columns.
+update public.profiles set settings = '{"restWeekdays":[7]}' where id = '00000000-0000-0000-0000-00000000000a';
+do $$ begin
+  assert (select settings->'restWeekdays' from public.profiles where id = auth.uid()) = '[7]'::jsonb, 'settings saved';
+end $$;
+
+-- Sync upserts with client-generated ids are idempotent.
+insert into public.habits (id, user_id, kind, key, name) values
+  ('00000000-0000-0000-0000-0000000000a9', '00000000-0000-0000-0000-00000000000a', 'preset', 'study', 'Study')
+  on conflict (id) do update set name = excluded.name;
+insert into public.habits (id, user_id, kind, key, name) values
+  ('00000000-0000-0000-0000-0000000000a9', '00000000-0000-0000-0000-00000000000a', 'preset', 'study', 'Study 30')
+  on conflict (id) do update set name = excluded.name;
+insert into public.habit_logs (habit_id, user_id, date, value) values
+  ('00000000-0000-0000-0000-0000000000a9', '00000000-0000-0000-0000-00000000000a', '2026-11-26', 10)
+  on conflict (habit_id, date) do update set value = excluded.value;
+insert into public.habit_logs (habit_id, user_id, date, value) values
+  ('00000000-0000-0000-0000-0000000000a9', '00000000-0000-0000-0000-00000000000a', '2026-11-26', 35)
+  on conflict (habit_id, date) do update set value = excluded.value;
+do $$ begin
+  assert (select count(*) from public.habits) = 1, 'habit upsert idempotent';
+  assert (select value from public.habit_logs) = 35, 'habit log upsert on (habit_id, date)';
+end $$;
+
 -- Money must be integers; currency must be ISO-shaped.
 do $$ begin
   begin
