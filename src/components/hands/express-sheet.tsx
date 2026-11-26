@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ChevronDown, LayoutGrid } from "lucide-react";
 import { Chips } from "@/components/forms/chips";
@@ -63,6 +64,7 @@ export function ExpressSheet() {
 }
 
 function ExpressForm({ onDone }: { onDone: () => void }) {
+  const router = useRouter();
   const running = useRunningSession();
   const setup = useHandSetup((s) => s.setup);
   const fourColor = useAppStore((s) => s.prefs.fourColorDeck);
@@ -120,7 +122,7 @@ function ExpressForm({ onDone }: { onDone: () => void }) {
       toast.success("Hand saved to “To finish”.", {
         action: {
           label: "Review",
-          onClick: () => (window.location.href = `/hands/view?id=${row.id}`),
+          onClick: () => router.push(`/hands/view?id=${row.id}`),
         },
       });
       onDone();

@@ -4,7 +4,6 @@ import { ArrowLeftRight, BookOpen, NotebookPen, Play, Plus, Timer } from "lucide
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Sheet } from "@/components/ui/sheet";
-import { toast } from "@/components/ui/toaster";
 import { copy } from "@/content/copy";
 import { haptic } from "@/lib/haptics";
 import { useRunningSession } from "@/lib/db/hooks";
