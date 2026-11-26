@@ -11,13 +11,14 @@ Edit on GitHub (pencil icon) → commit → Vercel redeploys in ~1 minute.
 | Onboarding: step titles, formats, stake suggestions, goal options, email consent text | `src/content/onboarding.ts`        |
 | Preset habits: names, hints, default targets, which are recommended                   | `src/content/habits.ts`            |
 | Stats wording: small-sample warnings, the “C-game vs A-game” insight sentence         | `src/content/copy.ts` → `stats`    |
+| Hand review steps (Preflop → … → The rule) and rule categories                        | `src/content/review.ts`            |
+| Hand tags (Mistake, Cooler…), smart list names, section icons                         | `src/content/hands.ts`             |
 | Reminder notification text                                                            | `src/content/notifications.ts`     |
 | Legal templates (privacy, terms, responsible gaming)                                  | `src/app/legal/[slug]/page.tsx`    |
 | Brand assets (logo files)                                                             | `public/brand/` (see README there) |
 
 Coming in later phases (same principle — one file or an admin screen):
 
-- Hand-review template labels (Preflop · Flop · Turn & river · Opponent · Multiway · Mental state · The rule) — Phase 2
 - Nudge texts, announcement defaults, prices (Free vs Pro) — Phase 3/5, editable from the admin panel
 - `coach-principles.md` — the AI coach's grounding document — Phase 4
 

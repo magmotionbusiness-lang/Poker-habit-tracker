@@ -194,6 +194,50 @@ Deterministic generator (`src/lib/demo/demo.ts`, tested): ~3 months of live 1/2 
 whole-dollar results, A-games win and C-games lose (so insights look meaningful), a 23-day streak
 and a $10k bankroll goal at exactly 64%. Removable from More → Data & sync. Hands arrive in Phase 2.
 
+## Phase 2 — Hands (2026-11-26)
+
+### Own poker engine (no external evaluator)
+
+`src/lib/poker/*` is dependency-free and pure: exact 5-of-7 Hold'em and 2+3 Omaha evaluation
+(≤ 100 combos per hand — fast enough for replays, tagging and demo data), a betting engine that
+replays a hand action by action (blinds, antes, straddles, bomb pots, min-raises, pot-limit caps,
+uncalled bets, side pots, chops with the odd chip left of the button, rake, run it twice) and
+auto-tagging. Writing it ourselves kept the bundle small and lets every rule be tested (61 tests).
+All-in equity and online hand-history import are **not in this phase** (see below).
+
+### Hand format
+
+`HandHistory` (`src/lib/poker/hand-types.ts`) is a compact OHH-style shape: integer minor units,
+bet/raise/call amounts stored as the player's street total (`to`), antes as dead money. Validated
+with Zod on save. Manual entry always seats the hero in seat 1 and moves the button to give the
+chosen position; the table rotates so the hero sits at the bottom.
+
+### When the winner can't be computed
+
+If villain cards are unknown at showdown, the user picks the winner(s) — we never guess. The
+result is stored as `winners` on the hand.
+
+### Custom sections
+
+Users' own folders for hands (`hand_collections`). Membership is stored on the hand
+(`hands.collection_ids`) so one row syncs; deleting a section never deletes hands.
+
+### Reviews feed the habit loop
+
+A first review increments today's "Review hands" habit (and therefore the streak). A rule written
+in the review lands in the Leak Book; writing the same rule again counts it ("Seen 3×"). The
+Today screen resurfaces one open rule per day, weighted toward frequent leaks.
+
+### Cross-device deletes
+
+A `tombstones` table filled by delete triggers lets other devices apply deletes on their next pull
+(closes the Phase 1 limitation). Tombstones of a deleted account are removed with it.
+
+### Not yet (planned)
+
+Online hand-history import (PokerStars/GG via `@poker-apprentice/hand-history-parser`, Web Worker),
+all-in equity, opponent notes, public share links and the image share card.
+
 ## Open questions for Máté / Nelson
 
 - Final app name (Stakers?) and whether the app mark should carry the UTS logo.
