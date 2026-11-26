@@ -1,6 +1,8 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { useGentle } from "@/lib/motion/motion";
+import { motion } from "framer-motion";
+import { CountUp } from "@/components/fx/count-up";
 import { cn } from "@/lib/utils";
 
 /** Streak flame with a gentle spring; dims when the streak is 0. */
@@ -16,7 +18,7 @@ export function StreakFlame({
   hideCount?: boolean;
   className?: string;
 }) {
-  const reduce = useReducedMotion();
+  const reduce = useGentle();
   const active = count > 0;
   const px = size === "sm" ? 22 : size === "md" ? 30 : 56;
   return (
@@ -31,9 +33,32 @@ export function StreakFlame({
         viewBox="0 0 24 24"
         aria-hidden
         initial={false}
-        animate={active && !reduce ? { scale: [1, 1.07, 1], rotate: [0, -2, 0] } : { scale: 1 }}
-        transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-        style={{ filter: active ? "drop-shadow(0 0 10px rgba(124,92,255,0.65))" : "none" }}
+        animate={
+          !active
+            ? { scale: 1 }
+            : reduce
+              ? {
+                  filter: [
+                    "drop-shadow(0 0 8px rgba(124,92,255,0.5))",
+                    "drop-shadow(0 0 16px rgba(124,92,255,0.9))",
+                    "drop-shadow(0 0 8px rgba(124,92,255,0.5))",
+                  ],
+                }
+              : {
+                  scale: [1, 1.09, 0.97, 1.06, 1],
+                  rotate: [0, -3, 2, -1.5, 0],
+                  y: [0, -1.5, 0, -1, 0],
+                  filter: [
+                    "drop-shadow(0 0 8px rgba(124,92,255,0.5))",
+                    "drop-shadow(0 0 16px rgba(124,92,255,0.95))",
+                    "drop-shadow(0 0 10px rgba(124,92,255,0.6))",
+                    "drop-shadow(0 0 14px rgba(124,92,255,0.85))",
+                    "drop-shadow(0 0 8px rgba(124,92,255,0.5))",
+                  ],
+                }
+        }
+        transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+        style={{ transformOrigin: "50% 90%" }}
       >
         <defs>
           <linearGradient id="flame" x1="0.5" y1="0" x2="0.5" y2="1">
@@ -61,7 +86,7 @@ export function StreakFlame({
             !active && "text-ink-muted",
           )}
         >
-          {count}
+          <CountUp value={count} />
         </span>
       )}
     </span>

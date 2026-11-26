@@ -115,7 +115,9 @@ export function LedgerChart({
               stroke={tokens.lavender}
               strokeWidth={2}
               fill="url(#ledger-fill)"
-              isAnimationActive={false}
+              isAnimationActive
+              animationDuration={1300}
+              animationEasing="ease-out"
               activeDot={{
                 r: 5,
                 fill: tokens.lavenderPale,

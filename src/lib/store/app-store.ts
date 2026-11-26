@@ -19,7 +19,10 @@ export type Prefs = {
   haptics: boolean;
   /** Sound effects (taps, chips, celebrations). */
   sound: boolean;
+  /** Animations: "auto" follows the phone's Reduce Motion (→ gentle), or force full / gentle. */
+  motion: MotionPref;
 };
+export type MotionPref = "auto" | "full" | "gentle";
 
 type AppState = {
   mode: AppMode | null;
@@ -78,6 +81,7 @@ const initialPrefs: Prefs = {
   fourColorDeck: false,
   haptics: true,
   sound: true,
+  motion: "auto",
 };
 
 export const useAppStore = create<AppState>()(
@@ -100,9 +104,9 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: "stakers.app.v1",
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => localStorage),
-      // v2 adds prefs.sound (defaults on for existing users).
+      // v2 adds prefs.sound, v3 prefs.motion (defaults for existing users).
       migrate: (persisted: unknown) => {
         const p = persisted as { prefs?: Partial<Prefs> } & Record<string, unknown>;
         return { ...p, prefs: { ...initialPrefs, ...(p.prefs ?? {}) } } as never;

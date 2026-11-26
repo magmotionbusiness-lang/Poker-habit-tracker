@@ -1,7 +1,7 @@
 "use client";
 
+import { useGentle } from "@/lib/motion/motion";
 import { useEffect, useRef } from "react";
-import { useReducedMotion } from "framer-motion";
 import { useCelebrations, type CelebrationKind } from "@/lib/store/celebrate";
 
 const COLORS = ["#7c5cff", "#a892ff", "#c5b6ff", "#f6f6fa", "#6847f0", "#34d399"];
@@ -18,6 +18,7 @@ type P = {
   c: string;
   life: number;
   shape: 0 | 1 | 2;
+  still?: boolean;
 };
 
 const CONFIG: Record<CelebrationKind, { count: number; speed: number; life: number }> = {
@@ -26,14 +27,14 @@ const CONFIG: Record<CelebrationKind, { count: number; speed: number; life: numb
   milestone: { count: 160, speed: 12, life: 110 },
 };
 
-/** Confetti-lite overlay. One shared canvas; respects reduced motion (no particles). */
+/** Confetti overlay. One shared canvas; gentle mode twinkles in place instead of flying. */
 export function Celebrations() {
   const bursts = useCelebrations((s) => s.bursts);
   const done = useCelebrations((s) => s.done);
   const canvas = useRef<HTMLCanvasElement>(null);
   const particles = useRef<P[]>([]);
   const raf = useRef<number | null>(null);
-  const reduce = useReducedMotion();
+  const reduce = useGentle();
 
   useEffect(() => {
     if (!bursts.length) return;
@@ -47,17 +48,17 @@ export function Celebrations() {
 
     for (const b of bursts) {
       done(b.id);
-      if (reduce) continue;
       const cfg = CONFIG[b.kind];
       const palette = b.kind === "milestone" ? MILESTONE_COLORS : COLORS;
       for (let i = 0; i < cfg.count; i++) {
         const a = Math.random() * Math.PI * 2;
-        const s = cfg.speed * (0.4 + Math.random() * 0.8);
+        const s = cfg.speed * (0.4 + Math.random() * 0.8) * (reduce ? 0.12 : 1);
         particles.current.push({
           x: b.x * window.innerWidth,
           y: b.y * window.innerHeight,
           vx: Math.cos(a) * s,
-          vy: Math.sin(a) * s - cfg.speed * 0.6,
+          vy: Math.sin(a) * s - (reduce ? 0 : cfg.speed * 0.6),
+          still: reduce,
           r: 3 + Math.random() * 4,
           rot: Math.random() * Math.PI,
           vr: (Math.random() - 0.5) * 0.3,
@@ -72,7 +73,7 @@ export function Celebrations() {
       ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
       particles.current = particles.current.filter((p) => p.life > 0);
       for (const p of particles.current) {
-        p.vy += 0.28;
+        if (!p.still) p.vy += 0.28;
         p.vx *= 0.985;
         p.x += p.vx;
         p.y += p.vy;

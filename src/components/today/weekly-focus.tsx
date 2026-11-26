@@ -21,7 +21,7 @@ export function WeeklyFocus({ today }: { today: string }) {
     <div className="space-y-2">
       {focus && (
         <div className="flex items-start gap-3 rounded-lg border border-line-accent bg-surface px-4 py-3">
-          <Crosshair className="mt-0.5 size-4 shrink-0 text-lavender" aria-hidden />
+          <Crosshair className="anim-spin-slow mt-0.5 size-4 shrink-0 text-lavender" aria-hidden />
           <div>
             <p className="eyebrow">{weeklyReview.focusEyebrow}</p>
             <p className="mt-0.5 text-sm font-medium">{focus}</p>

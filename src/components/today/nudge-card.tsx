@@ -60,7 +60,7 @@ export function NudgeCard({ today, tz, streak }: { today: string; tz: string; st
   return (
     <div className="pop-in relative flex gap-3 rounded-lg border border-line-accent bg-surface px-4 py-3">
       <span className="grid size-9 shrink-0 place-items-center rounded-full bg-pill text-gold">
-        <Lightbulb className="size-4" aria-hidden />
+        <Lightbulb className="anim-pulse size-4" aria-hidden />
       </span>
       <div className="min-w-0 flex-1 pr-6">
         <p className="text-sm font-semibold">{n.title}</p>

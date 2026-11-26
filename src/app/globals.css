@@ -205,15 +205,10 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+/* Motion policy lives in <html data-motion="full|gentle"> (see lib/motion). Gentle keeps
+   fades, fills and count-ups and swaps movement for fades — nothing ever snaps. */
+[data-motion="gentle"] {
+  scroll-behavior: auto;
 }
 
 /* ---------- Launch intro (see components/shell/intro.tsx) ---------- */
@@ -223,22 +218,24 @@
   z-index: 200;
   pointer-events: none;
   background: var(--canvas);
-  animation: intro-out 420ms cubic-bezier(0.4, 0, 0.2, 1) 1.35s forwards;
+  animation: intro-out 750ms cubic-bezier(0.4, 0, 0.2, 1) 2.25s forwards;
 }
-.no-intro #intro {
+[data-intro="skip"] #intro {
   display: none;
 }
 #intro .intro-glow {
   position: absolute;
   left: 50%;
   top: 46%;
-  width: 90vmin;
-  height: 90vmin;
-  transform: translate(-50%, -50%) scale(0.4);
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(124, 92, 255, 0.35) 0%, rgba(124, 92, 255, 0) 65%);
+  width: 95vmin;
+  height: 95vmin;
+  transform: translate(-50%, -50%) scale(0.3);
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(124, 92, 255, 0.42), transparent 62%);
   opacity: 0;
-  animation: intro-glow 900ms cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards;
+  animation:
+    intro-glow 1400ms cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards,
+    intro-breathe 2.4s ease-in-out 1.6s infinite;
 }
 #intro .intro-stack {
   position: absolute;
@@ -248,53 +245,82 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  animation: intro-stack-out 750ms cubic-bezier(0.4, 0, 0.2, 1) 2.2s forwards;
 }
 #intro .intro-mark {
   width: 22vmin;
   height: 22vmin;
   max-width: 132px;
   max-height: 132px;
-  filter: drop-shadow(0 12px 40px rgba(124, 92, 255, 0.45));
+  opacity: 0;
+  filter: blur(14px) drop-shadow(0 12px 40px rgba(124, 92, 255, 0.45));
+  transform: scale(0.72);
+  animation: intro-mark 900ms cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
 }
 #intro .intro-bar {
   transform-box: fill-box;
   transform-origin: bottom;
   transform: scaleY(0);
-  animation: intro-bar 460ms cubic-bezier(0.2, 0.9, 0.2, 1.25) forwards;
+  animation: intro-bar 620ms cubic-bezier(0.2, 0.9, 0.2, 1.25) forwards;
 }
 #intro .intro-bar-1 {
-  animation-delay: 0.12s;
+  animation-delay: 0.5s;
 }
 #intro .intro-bar-2 {
-  animation-delay: 0.24s;
+  animation-delay: 0.66s;
 }
 #intro .intro-bar-3 {
-  animation-delay: 0.36s;
+  animation-delay: 0.82s;
+}
+#intro .intro-sweep {
+  animation: intro-sweep 900ms cubic-bezier(0.4, 0, 0.2, 1) 1.25s forwards;
 }
 #intro .intro-word {
-  margin-top: 18px;
+  margin-top: 20px;
   font-family: var(--font-display);
-  font-size: 30px;
+  font-size: 32px;
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--ink);
+  display: flex;
+}
+#intro .intro-word span {
+  display: inline-block;
   opacity: 0;
-  transform: translateY(8px);
-  animation: intro-word 520ms cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+  filter: blur(8px);
+  transform: translateY(10px);
+  animation: intro-letter 600ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 #intro .intro-by {
-  margin-top: 2px;
+  margin-top: 4px;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.3em;
   text-transform: uppercase;
   color: var(--lavender);
   opacity: 0;
-  animation: intro-word 520ms cubic-bezier(0.16, 1, 0.3, 1) 0.78s forwards;
+  animation: intro-by 800ms cubic-bezier(0.16, 1, 0.3, 1) 1.6s forwards;
+}
+/* The app fades up underneath as the intro dissolves. */
+html[data-intro="play"] #main,
+html[data-intro="play"] nav[aria-label="Main"] {
+  animation: app-reveal 800ms cubic-bezier(0.16, 1, 0.3, 1) 2.3s both;
+}
+@keyframes intro-mark {
+  to {
+    opacity: 1;
+    filter: blur(0) drop-shadow(0 12px 40px rgba(124, 92, 255, 0.45));
+    transform: scale(1);
+  }
 }
 @keyframes intro-bar {
   to {
     transform: scaleY(1);
+  }
+}
+@keyframes intro-sweep {
+  to {
+    transform: rotate(20deg) translateX(120px);
   }
 }
 @keyframes intro-glow {
@@ -303,10 +329,32 @@
     transform: translate(-50%, -50%) scale(1);
   }
 }
-@keyframes intro-word {
+@keyframes intro-breathe {
+  50% {
+    opacity: 0.7;
+  }
+}
+@keyframes intro-letter {
   to {
     opacity: 1;
+    filter: blur(0);
     transform: none;
+  }
+}
+@keyframes intro-by {
+  from {
+    letter-spacing: 0.6em;
+  }
+  to {
+    opacity: 1;
+    letter-spacing: 0.14em;
+  }
+}
+@keyframes intro-stack-out {
+  to {
+    opacity: 0;
+    transform: translate(-50%, calc(-11vmin)) scale(1.08);
+    filter: blur(6px);
   }
 }
 @keyframes intro-out {
@@ -315,21 +363,44 @@
     visibility: hidden;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  #intro {
-    animation-delay: 0.35s !important;
+@keyframes app-reveal {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
   }
-  #intro .intro-bar,
-  #intro .intro-word,
-  #intro .intro-by,
-  #intro .intro-glow {
-    animation-delay: 0s !important;
+}
+/* Gentle motion: same timeline, fades only. */
+[data-motion="gentle"] #intro .intro-mark {
+  transform: none;
+}
+[data-motion="gentle"] #intro .intro-bar {
+  animation-name: intro-fade;
+  transform: none;
+  opacity: 0;
+}
+[data-motion="gentle"] #intro .intro-word span {
+  transform: none;
+}
+[data-motion="gentle"] #intro .intro-sweep {
+  display: none;
+}
+[data-motion="gentle"] #intro .intro-stack {
+  animation-name: intro-out;
+}
+html[data-motion="gentle"][data-intro="play"] #main,
+html[data-motion="gentle"][data-intro="play"] nav[aria-label="Main"] {
+  animation-name: fade-in;
+}
+@keyframes intro-fade {
+  to {
+    opacity: 1;
   }
 }
 
 /* ---------- Progress motion ---------- */
 .progress-grow {
-  animation: progress-grow 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: progress-grow 1400ms cubic-bezier(0.16, 1, 0.3, 1) 250ms both;
+  transition: width 900ms cubic-bezier(0.16, 1, 0.3, 1);
   transform-origin: left;
 }
 .progress-shimmer {
@@ -372,4 +443,265 @@
     opacity: 0;
     transform: scale(0.6) translateY(6px);
   }
+}
+
+/* ---------- Motion library (full + gentle) ---------- */
+:root {
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.2, 0.9, 0.25, 1.25);
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+}
+
+/* Every screen glides in: its sections rise one after another (template.tsx). */
+.page-enter > * > *,
+.stagger > * {
+  animation: rise-in 620ms var(--ease-out-expo) both;
+}
+.stagger > * {
+  animation-duration: 480ms;
+}
+.page-enter > * > :nth-child(1) {
+  animation-delay: 20ms;
+}
+.page-enter > * > :nth-child(2) {
+  animation-delay: 80ms;
+}
+.page-enter > * > :nth-child(3) {
+  animation-delay: 140ms;
+}
+.page-enter > * > :nth-child(4) {
+  animation-delay: 200ms;
+}
+.page-enter > * > :nth-child(5) {
+  animation-delay: 260ms;
+}
+.page-enter > * > :nth-child(6) {
+  animation-delay: 320ms;
+}
+.page-enter > * > :nth-child(7) {
+  animation-delay: 380ms;
+}
+.page-enter > * > :nth-child(8) {
+  animation-delay: 430ms;
+}
+.page-enter > * > :nth-child(9) {
+  animation-delay: 480ms;
+}
+.page-enter > * > :nth-child(n + 10) {
+  animation-delay: 520ms;
+}
+.stagger > :nth-child(1) {
+  animation-delay: 30ms;
+}
+.stagger > :nth-child(2) {
+  animation-delay: 70ms;
+}
+.stagger > :nth-child(3) {
+  animation-delay: 110ms;
+}
+.stagger > :nth-child(4) {
+  animation-delay: 150ms;
+}
+.stagger > :nth-child(5) {
+  animation-delay: 190ms;
+}
+.stagger > :nth-child(6) {
+  animation-delay: 230ms;
+}
+.stagger > :nth-child(7) {
+  animation-delay: 270ms;
+}
+.stagger > :nth-child(8) {
+  animation-delay: 310ms;
+}
+.stagger > :nth-child(9) {
+  animation-delay: 350ms;
+}
+.stagger > :nth-child(n + 10) {
+  animation-delay: 380ms;
+}
+
+/* Tactile press for anything tappable that isn't a <Button>. */
+.press {
+  transition:
+    transform 180ms var(--ease-spring),
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+.press:active {
+  transform: scale(0.97);
+}
+
+/* Idle life for icons. */
+.anim-float {
+  animation: float 3.4s ease-in-out infinite;
+}
+.anim-wiggle {
+  animation: wiggle 4.5s ease-in-out infinite;
+  transform-origin: 50% 80%;
+}
+.anim-spin-slow {
+  animation: spin 14s linear infinite;
+}
+.anim-pulse {
+  animation: soft-pulse 2.4s ease-in-out infinite;
+}
+.anim-breathe {
+  animation: breathe 2.8s ease-in-out infinite;
+}
+.anim-flicker {
+  animation: flicker 2.2s ease-in-out infinite;
+  transform-origin: 50% 90%;
+}
+.anim-bounce-in {
+  animation: bounce-in 620ms var(--ease-spring) both;
+}
+.anim-shine {
+  position: relative;
+  overflow: hidden;
+}
+.anim-shine::after {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background: linear-gradient(
+    115deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 65%
+  );
+  transform: translateX(-120%);
+  animation: shine 4.2s ease-in-out infinite;
+  animation-delay: var(--shine-delay, 0s);
+  pointer-events: none;
+}
+@keyframes float {
+  50% {
+    transform: translateY(-4px);
+  }
+}
+@keyframes wiggle {
+  0%,
+  70%,
+  100% {
+    transform: rotate(0);
+  }
+  74% {
+    transform: rotate(-12deg);
+  }
+  80% {
+    transform: rotate(10deg);
+  }
+  86% {
+    transform: rotate(-6deg);
+  }
+  92% {
+    transform: rotate(3deg);
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes soft-pulse {
+  50% {
+    transform: scale(1.08);
+    filter: brightness(1.2);
+  }
+}
+@keyframes breathe {
+  0%,
+  100% {
+    box-shadow: 0 10px 30px rgba(124, 92, 255, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 10px 44px rgba(124, 92, 255, 0.7),
+      0 0 0 8px rgba(124, 92, 255, 0.12);
+  }
+}
+@keyframes flicker {
+  0%,
+  100% {
+    transform: scale(1) rotate(0);
+  }
+  25% {
+    transform: scale(1.06, 1.1) rotate(-2deg);
+  }
+  50% {
+    transform: scale(0.98, 1.02) rotate(1.5deg);
+  }
+  75% {
+    transform: scale(1.04, 1.08) rotate(-1deg);
+  }
+}
+@keyframes bounce-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+@keyframes shine {
+  0%,
+  60% {
+    transform: translateX(-120%);
+  }
+  85%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+/* Gentle: swap movement for fades, keep glows and fills. */
+[data-motion="gentle"] .page-enter > * > *,
+[data-motion="gentle"] .stagger > *,
+[data-motion="gentle"] .pop-in,
+[data-motion="gentle"] .heat-in,
+[data-motion="gentle"] .anim-bounce-in {
+  animation-name: fade-in;
+}
+[data-motion="gentle"] .anim-float,
+[data-motion="gentle"] .anim-wiggle,
+[data-motion="gentle"] .anim-spin-slow,
+[data-motion="gentle"] .anim-flicker,
+[data-motion="gentle"] .anim-pulse {
+  animation: none;
+}
+[data-motion="gentle"] .press:active {
+  transform: none;
+  opacity: 0.8;
+}
+
+/* SVG ring fills sweep in from empty on mount (ProgressRing). */
+.ring-fill {
+  animation: ring-fill 1300ms cubic-bezier(0.16, 1, 0.3, 1) 200ms backwards;
+}
+@keyframes ring-fill {
+  from {
+    stroke-dashoffset: var(--ring-c);
+  }
+}
+/* Chart lines draw themselves in (pathLength=1). */
+.draw-in {
+  stroke-dasharray: 1;
+  animation: draw-in 1600ms cubic-bezier(0.65, 0, 0.35, 1) 200ms backwards;
+}
+@keyframes draw-in {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+.area-in {
+  animation: fade-in 1200ms ease 600ms backwards;
 }

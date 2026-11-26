@@ -167,10 +167,11 @@ export function TodayScreen() {
             </Button>
           </div>
         ) : (
-          <ul className="grid grid-cols-3 gap-x-2 gap-y-4">
-            {habits.map((d) => (
+          <ul className="stagger grid grid-cols-3 gap-x-2 gap-y-4">
+            {habits.map((d, i) => (
               <li key={d.habit.id}>
                 <HabitRingButton
+                  index={i}
                   day={d}
                   onTap={(el) => tap(d, el)}
                   onMinus={() => setHabitValue(d.habit.id, today, d.value - 1)}

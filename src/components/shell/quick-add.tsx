@@ -51,13 +51,17 @@ export function QuickAdd() {
             haptic();
             setOpen(true);
           }}
-          className="fixed right-[max(16px,var(--safe-right))] bottom-[calc(var(--tabbar-height)+var(--safe-bottom)+16px)] z-40 grid size-14 place-items-center rounded-full bg-[image:var(--gradient-primary)] text-white shadow-accent transition-transform active:scale-95"
+          className="anim-breathe fixed right-[max(16px,var(--safe-right))] bottom-[calc(var(--tabbar-height)+var(--safe-bottom)+16px)] z-40 grid size-14 place-items-center rounded-full bg-[image:var(--gradient-primary)] text-white shadow-accent transition-transform duration-300 active:scale-90"
         >
-          <Plus className="size-7" strokeWidth={2.2} aria-hidden />
+          <Plus
+            className={`size-7 transition-transform duration-500 ease-[cubic-bezier(0.2,0.9,0.25,1.25)] ${open ? "rotate-[135deg]" : ""}`}
+            strokeWidth={2.2}
+            aria-hidden
+          />
         </button>
       )}
       <Sheet open={open} onOpenChange={setOpen} title={copy.quickAdd.title}>
-        <ul className="space-y-2">
+        <ul className="stagger space-y-2">
           {actions.map(({ key, icon: Icon, ...rest }) => {
             const item = copy.quickAdd[key];
             const featured = "featured" in rest;
@@ -68,8 +72,8 @@ export function QuickAdd() {
                   onClick={() => run(key)}
                   className={
                     featured
-                      ? "flex w-full items-center gap-4 rounded-lg border border-line-accent bg-[radial-gradient(ellipse_at_left,rgba(124,92,255,0.22),transparent_70%)] p-4 text-left"
-                      : "flex w-full items-center gap-4 rounded-lg border border-line bg-surface p-4 text-left hover:border-line-strong"
+                      ? "press flex w-full items-center gap-4 rounded-lg border border-line-accent bg-[radial-gradient(ellipse_at_left,rgba(124,92,255,0.22),transparent_70%)] p-4 text-left"
+                      : "press flex w-full items-center gap-4 rounded-lg border border-line bg-surface p-4 text-left hover:border-line-strong"
                   }
                 >
                   <span

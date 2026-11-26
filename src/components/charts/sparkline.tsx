@@ -34,8 +34,14 @@ export function Sparkline({
           <stop offset="100%" stopColor="#7c5cff" stopOpacity="0" />
         </linearGradient>
       </defs>
-      <path d={`${d} L${width},${height} L0,${height} Z`} fill="url(#spark-fill)" />
       <path
+        className="area-in"
+        d={`${d} L${width},${height} L0,${height} Z`}
+        fill="url(#spark-fill)"
+      />
+      <path
+        className="draw-in"
+        pathLength={1}
         d={d}
         fill="none"
         stroke="#a892ff"
@@ -47,6 +53,8 @@ export function Sparkline({
         cx={last[0]}
         cy={last[1]}
         r={3}
+        className="anim-bounce-in"
+        style={{ animationDelay: "1.5s", transformBox: "fill-box", transformOrigin: "center" }}
         fill="#c5b6ff"
         stroke="var(--surface)"
         strokeWidth={2}

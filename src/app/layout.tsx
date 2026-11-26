@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import { Toaster } from "@/components/ui/toaster";
 import { Celebrations } from "@/components/fx/celebrations";
 import { Intro } from "@/components/shell/intro";
+import { MotionSync } from "@/components/shell/motion-sync";
 import { SoundSync } from "@/components/shell/sound-sync";
 import { AuthSync } from "@/components/shell/auth-sync";
 import { ServiceWorkerRegister } from "@/components/shell/sw-register";
@@ -59,7 +60,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${fraunces.variable} ${jakarta.variable}`} suppressHydrationWarning>
       <body className="min-h-dvh">
         <Intro />
-        {children}
+        <MotionSync>{children}</MotionSync>
         <Celebrations />
         <SoundSync />
         <Toaster />

@@ -1,7 +1,8 @@
 "use client";
 
+import { useGentle } from "@/lib/motion/motion";
 import { useRef } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Check, Flame, X } from "lucide-react";
 import { PlayingCard } from "@/components/poker/playing-card";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -17,7 +18,7 @@ const pairs = (s: string) => s.match(/.{2}/g) ?? [];
 
 /** One multiple-choice spot per day, with its own small streak. */
 export function DailyHandCard() {
-  const reduce = useReducedMotion();
+  const reduce = useGentle();
   const settings = useSettings();
   const { today } = useToday();
   const ref = useRef<HTMLDivElement>(null);
@@ -48,7 +49,7 @@ export function DailyHandCard() {
               className="num flex items-center gap-1 text-sm font-semibold text-gold"
               aria-label={`${streak}-day Daily Hand streak`}
             >
-              <Flame className="size-4" aria-hidden /> {streak}
+              <Flame className="anim-flicker size-4" aria-hidden /> {streak}
             </span>
           ) : null
         }
@@ -103,7 +104,7 @@ export function DailyHandCard() {
       <AnimatePresence>
         {picked && (
           <motion.div
-            initial={reduce ? false : { opacity: 0, height: 0 }}
+            initial={reduce ? { opacity: 0 } : { opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             className="overflow-hidden"
           >

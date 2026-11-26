@@ -24,7 +24,7 @@ export function ListRow({
   const inner = (
     <>
       {icon && (
-        <span className="grid size-9 shrink-0 place-items-center rounded-md bg-pill text-lavender [&_svg]:size-[18px] [&_svg]:stroke-[1.75]">
+        <span className="grid size-9 shrink-0 place-items-center rounded-md bg-pill text-lavender transition-transform duration-300 ease-[cubic-bezier(0.2,0.9,0.25,1.25)] group-hover:scale-110 group-hover:-rotate-6 group-active:scale-90 [&_svg]:size-[18px] [&_svg]:stroke-[1.75]">
           {icon}
         </span>
       )}
@@ -33,11 +33,16 @@ export function ListRow({
         {detail && <span className="block truncate text-sm text-ink-muted">{detail}</span>}
       </span>
       {trailing ??
-        ((href || onClick) && <ChevronRight className="size-5 text-ink-subtle" aria-hidden />)}
+        ((href || onClick) && (
+          <ChevronRight
+            className="size-5 text-ink-subtle transition-transform duration-300 group-hover:translate-x-1 group-active:translate-x-1.5"
+            aria-hidden
+          />
+        ))}
     </>
   );
   const cls = cn(
-    "flex min-h-[56px] w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-white/[0.03] active:bg-white/[0.05]",
+    "group flex min-h-[56px] w-full items-center gap-3 px-4 py-2.5 text-left transition-colors duration-200 hover:bg-white/[0.03] active:bg-white/[0.06]",
     className,
   );
   if (href) {
@@ -65,7 +70,7 @@ export function ListGroup({ title, children }: { title?: string; children: React
   return (
     <section className="space-y-2">
       {title && <h2 className="eyebrow px-1 !font-sans">{title}</h2>}
-      <div className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
+      <div className="stagger divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
         {children}
       </div>
     </section>

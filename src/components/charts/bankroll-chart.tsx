@@ -74,7 +74,9 @@ export function BankrollChart({
             strokeWidth={2}
             fill="url(#bankroll-fill)"
             activeDot={{ r: 5, fill: tokens.lavenderPale, stroke: tokens.surface, strokeWidth: 2 }}
-            isAnimationActive={false}
+            isAnimationActive
+            animationDuration={1300}
+            animationEasing="ease-out"
           />
         </AreaChart>
       </ResponsiveContainer>

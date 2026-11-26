@@ -88,7 +88,13 @@ export function ProgressRing({
           strokeLinecap="round"
           strokeDasharray={c}
           strokeDashoffset={c * (1 - v)}
-          style={{ transition: "stroke-dashoffset 500ms cubic-bezier(0.4,0,0.2,1)" }}
+          className="ring-fill"
+          style={
+            {
+              "--ring-c": c,
+              transition: "stroke-dashoffset 900ms cubic-bezier(0.16,1,0.3,1), stroke 400ms",
+            } as React.CSSProperties
+          }
         />
         <defs>
           <linearGradient id="ring-gradient" x1="0" y1="0" x2="1" y2="1">

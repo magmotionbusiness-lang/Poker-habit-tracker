@@ -17,6 +17,7 @@ import { MonthlyBars } from "@/components/charts/monthly-bars";
 import { WinLossCalendar } from "@/components/charts/win-loss-calendar";
 import { StatsFilterSheet, type RangeKey } from "@/components/bankroll/stats-filter-sheet";
 import { formatDuration } from "@/components/sessions/timer";
+import { CountUp } from "@/components/fx/count-up";
 import { PageHeader } from "@/components/shell/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -170,7 +171,7 @@ export function BankrollScreen() {
           }
         />
         <p className="num font-display text-[40px] leading-none font-semibold tracking-[-0.02em]">
-          {money(br!.balance)}
+          <CountUp value={br!.balance} format={(v) => money(Math.round(v))} />
         </p>
         <p className="mt-1.5 text-sm text-ink-muted">
           {summary.items.length > 1 &&
@@ -309,7 +310,7 @@ export function BankrollScreen() {
         {view.list.length === 0 ? (
           <p className="px-1 text-sm text-ink-muted">No sessions in this bankroll yet.</p>
         ) : (
-          <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
+          <ul className="stagger divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
             {(showAll ? view.list : view.list.slice(0, 15)).map((s) => {
               const r = sessionDelta(s, bankroll);
               const venue = venues.find((v) => v.id === s.venue_id)?.name;
@@ -356,7 +357,7 @@ export function BankrollScreen() {
           <h2 id="tx-h" className="eyebrow px-1 !font-sans">
             Deposits & withdrawals
           </h2>
-          <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
+          <ul className="stagger divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
             {view.txs.slice(0, 10).map((t) => {
               const incoming =
                 t.type === "deposit" ||

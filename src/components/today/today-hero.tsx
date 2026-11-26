@@ -1,7 +1,9 @@
 "use client";
 
+import { useGentle } from "@/lib/motion/motion";
+import { useSettled } from "@/lib/motion/use-settled";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Check, Snowflake } from "lucide-react";
 import { StreakFlame } from "@/components/brand/streak-flame";
 import { CountUp } from "@/components/fx/count-up";
@@ -27,7 +29,8 @@ export function TodayHero({
   freezes: number;
   maxFreezes: number;
 }) {
-  const reduce = useReducedMotion();
+  const reduce = useGentle();
+  const delay = useSettled() ? 0 : 0.3;
   const r = (SIZE - STROKE) / 2;
   const c = 2 * Math.PI * r;
   const frac = required ? Math.min(1, done / required) : 1;
@@ -77,12 +80,12 @@ export function TodayHero({
               strokeWidth={STROKE}
               strokeLinecap="round"
               strokeDasharray={c}
-              initial={reduce ? false : { strokeDashoffset: c }}
+              initial={{ strokeDashoffset: c }}
               animate={{ strokeDashoffset: c * (1 - frac) }}
               transition={
                 reduce
-                  ? { duration: 0 }
-                  : { type: "spring", stiffness: 70, damping: 15, delay: 0.15 }
+                  ? { duration: 1.2, ease: [0.16, 1, 0.3, 1], delay }
+                  : { type: "spring", stiffness: 38, damping: 12, delay }
               }
               style={{
                 filter: counts
@@ -103,7 +106,7 @@ export function TodayHero({
           <p className="font-display text-[22px] leading-tight font-semibold">
             {counts && required > 0 && (
               <Check
-                className="mr-1 inline size-5 -translate-y-0.5 text-success"
+                className="anim-bounce-in mr-1 inline size-5 -translate-y-0.5 text-success"
                 strokeWidth={3}
                 aria-hidden
               />
@@ -126,7 +129,8 @@ export function TodayHero({
             {Array.from({ length: maxFreezes }, (_, i) => (
               <Snowflake
                 key={i}
-                className={`size-3.5 ${i < freezes ? "text-lavender" : "text-ink-subtle/40"}`}
+                style={{ animationDelay: `${i * -3}s` }}
+                className={`size-3.5 ${i < freezes ? "anim-spin-slow text-lavender" : "text-ink-subtle/40"}`}
                 aria-hidden
               />
             ))}

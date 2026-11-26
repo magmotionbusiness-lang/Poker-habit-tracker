@@ -150,7 +150,9 @@ export function ProgressScreen() {
       <Card>
         <CardHeader
           eyebrow="Milestones"
-          action={<Trophy className="size-5 text-lavender" strokeWidth={1.6} aria-hidden />}
+          action={
+            <Trophy className="anim-wiggle size-5 text-lavender" strokeWidth={1.6} aria-hidden />
+          }
         />
         <MilestoneBadges longest={streak.longest} />
       </Card>

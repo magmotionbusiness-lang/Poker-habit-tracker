@@ -52,7 +52,11 @@ export function GoalCard({
     <Card glow={goal.is_main}>
       <CardHeader
         eyebrow={eyebrow}
-        action={action ?? <Target className="size-5 text-lavender" strokeWidth={1.6} aria-hidden />}
+        action={
+          action ?? (
+            <Target className="anim-pulse size-5 text-lavender" strokeWidth={1.6} aria-hidden />
+          )
+        }
       />
       <p className="mb-3 font-display text-xl font-semibold tracking-[-0.01em]">
         <TwoTone title={goal.title} />

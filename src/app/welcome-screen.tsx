@@ -1,9 +1,10 @@
 "use client";
 
+import { useGentle } from "@/lib/motion/motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Wordmark } from "@/components/brand/stakers-mark";
 import { Headline } from "@/components/brand/headline";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +19,7 @@ export function WelcomeScreen() {
   const hydrated = useHydrated();
   const mode = useAppStore((s) => s.mode);
   const setMode = useAppStore((s) => s.setMode);
-  const reduce = useReducedMotion();
+  const reduce = useGentle();
   const starting = useRef(false);
 
   // Returning users skip the welcome screen (but not while we're starting a new guest).

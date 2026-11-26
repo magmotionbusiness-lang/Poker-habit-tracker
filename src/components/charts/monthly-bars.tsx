@@ -64,7 +64,14 @@ export function MonthlyBars({
               ) : null;
             }}
           />
-          <Bar dataKey="net" radius={[4, 4, 4, 4]} maxBarSize={28} isAnimationActive={false}>
+          <Bar
+            dataKey="net"
+            radius={[4, 4, 4, 4]}
+            maxBarSize={28}
+            isAnimationActive
+            animationDuration={1300}
+            animationEasing="ease-out"
+          >
             {data.map((d) => (
               <Cell key={d.month} fill={d.net >= 0 ? tokens.success : tokens.danger} />
             ))}

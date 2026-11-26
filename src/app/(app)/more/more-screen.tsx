@@ -162,6 +162,26 @@ export function MoreScreen() {
             />
           }
         />
+        <div className="px-4 py-3">
+          <p className="mb-1 flex items-center gap-2 font-medium">
+            <Sparkles className="anim-pulse size-4 text-lavender" aria-hidden /> Animations
+          </p>
+          <p className="mb-2 text-sm text-ink-muted">
+            Gentle keeps fades, fills and counters but drops slides and bounces. Auto follows your
+            phone&apos;s Reduce Motion setting.
+          </p>
+          <Segmented
+            ariaLabel="Animations"
+            value={prefs.motion ?? "auto"}
+            onValueChange={(v) => setPrefs({ motion: v })}
+            options={[
+              { value: "auto", label: "Auto" },
+              { value: "full", label: "Full" },
+              { value: "gentle", label: "Gentle" },
+            ]}
+            className="w-full [&>*]:flex-1"
+          />
+        </div>
         <ListRow
           label="Four-colour deck"
           detail="Diamonds blue, clubs green"

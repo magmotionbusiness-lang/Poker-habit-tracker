@@ -261,7 +261,7 @@ export function HandsScreen() {
                 : "Nothing here yet."}
             </p>
           ) : (
-            <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
+            <ul className="stagger divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
               {list.slice(0, limit).map((h) => (
                 <li key={h.id}>
                   <HandRow hand={h} mode={prefs.displayMode} fourColor={prefs.fourColorDeck} />

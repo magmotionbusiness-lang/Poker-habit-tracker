@@ -1,6 +1,8 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useGentle } from "@/lib/motion/motion";
+import { useSettled } from "@/lib/motion/use-settled";
+import { AnimatePresence, motion } from "framer-motion";
 import { Check, Minus } from "lucide-react";
 import { useRef } from "react";
 import type { HabitDay } from "@/lib/habits/habits";
@@ -19,12 +21,17 @@ export function HabitRingButton({
   day,
   onTap,
   onMinus,
+  index = 0,
 }: {
   day: HabitDay;
+  /** Position in the row: rings fill one after another on load. */
+  index?: number;
   onTap: (el: HTMLElement | null) => void;
   onMinus?: () => void;
 }) {
-  const reduce = useReducedMotion();
+  const reduce = useGentle();
+  const settled = useSettled();
+  const delay = settled ? 0 : 0.25 + index * 0.09;
   const ref = useRef<HTMLButtonElement>(null);
   const { habit, value, target, complete, applies } = day;
   const auto = presetByKey(habit.key)?.auto === "sessions";
@@ -79,9 +86,13 @@ export function HabitRingButton({
             strokeWidth={STROKE}
             strokeLinecap="round"
             strokeDasharray={c}
-            initial={false}
+            initial={{ strokeDashoffset: c }}
             animate={{ strokeDashoffset: c * (1 - frac) }}
-            transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 120, damping: 16 }}
+            transition={
+              reduce
+                ? { duration: 0.9, ease: [0.16, 1, 0.3, 1], delay }
+                : { type: "spring", stiffness: 55, damping: 13, mass: 1, delay }
+            }
             style={{
               filter: complete
                 ? "drop-shadow(0 0 6px rgba(52,211,153,0.6))"
@@ -91,9 +102,21 @@ export function HabitRingButton({
             }}
           />
         </svg>
+        <AnimatePresence>
+          {complete && !reduce && (
+            <motion.span
+              key="ripple"
+              aria-hidden
+              className="pointer-events-none absolute inset-0 rounded-full border-2 border-success"
+              initial={{ scale: 0.85, opacity: 0.9 }}
+              animate={{ scale: 1.6, opacity: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+            />
+          )}
+        </AnimatePresence>
         <span
           className={cn(
-            "grid size-11 place-items-center rounded-full transition-colors",
+            "grid size-11 place-items-center rounded-full transition-colors duration-500",
             complete ? "bg-success/15 text-success" : "bg-pill text-lavender",
           )}
         >
@@ -101,7 +124,7 @@ export function HabitRingButton({
             {complete ? (
               <motion.span
                 key="done"
-                initial={reduce ? false : { scale: 0, rotate: -45 }}
+                initial={reduce ? { opacity: 0 } : { scale: 0, rotate: -45 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: "spring", stiffness: 500, damping: 18 }}
               >
@@ -110,7 +133,7 @@ export function HabitRingButton({
             ) : (
               <motion.span
                 key="icon"
-                initial={reduce ? false : { scale: 0.6, opacity: 0 }}
+                initial={reduce ? { opacity: 0 } : { scale: 0.6, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
               >
                 <HabitIcon habitKey={habit.key} className="size-5" />

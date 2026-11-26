@@ -17,9 +17,13 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center rounded-xl border border-dashed border-line-accent bg-[radial-gradient(ellipse_at_top,rgba(124,92,255,0.12),transparent_70%)] px-6 py-10 text-center">
-      {art && <div className="pop-in mb-4">{art}</div>}
+      {art && (
+        <div className="pop-in mb-4">
+          <div className="anim-float">{art}</div>
+        </div>
+      )}
       {!art && icon && (
-        <div className="mb-4 grid size-14 place-items-center rounded-full bg-pill text-lavender shadow-[0_0_32px_rgba(124,92,255,0.35)] [&_svg]:size-6 [&_svg]:stroke-[1.5]">
+        <div className="anim-float mb-4 grid size-14 place-items-center rounded-full bg-pill text-lavender shadow-[0_0_32px_rgba(124,92,255,0.35)] [&_svg]:size-6 [&_svg]:stroke-[1.5]">
           {icon}
         </div>
       )}

@@ -1,7 +1,8 @@
 "use client";
 
+import { useGentle } from "@/lib/motion/motion";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { AlertTriangle, ChevronsUp, Lock, MapPin, Settings2, Share2, Target } from "lucide-react";
 import { ShareSheet } from "@/components/share/share-sheet";
 import { CountUp } from "@/components/fx/count-up";
@@ -45,7 +46,7 @@ export function ruleFor(settings: UserSettings, kind: LadderKind): BankrollRule 
  * exactly what the next rung costs, and when to take a shot or step down.
  */
 export function StakeLadder() {
-  const reduce = useReducedMotion();
+  const reduce = useGentle();
   const currency = useAppStore((s) => s.prefs.currency);
   const summary = useBankrollSummary(currency);
   const sessions = useSessions();
@@ -156,7 +157,7 @@ export function StakeLadder() {
         <div className="mb-4">
           <div className="mb-1.5 flex items-baseline justify-between gap-2 text-sm">
             <span className="flex items-center gap-1.5 font-semibold">
-              <Target className="size-4 text-lavender" aria-hidden />
+              <Target className="anim-pulse size-4 text-lavender" aria-hidden />
               {ladderCopy.toNext(money(view.next!.needed), next.label)}
             </span>
             <span className="num text-ink-muted">{Math.floor(view.next!.fraction * 100)}%</span>
@@ -172,7 +173,7 @@ export function StakeLadder() {
           {ladderCopy.moveDown(current.label)}
         </Banner>
       ) : view.shot && next ? (
-        <Banner tone="gold" icon={<ChevronsUp className="size-4" aria-hidden />}>
+        <Banner tone="gold" icon={<ChevronsUp className="anim-float size-4" aria-hidden />}>
           {ladderCopy.shot(next.label)}
         </Banner>
       ) : null}
@@ -184,7 +185,7 @@ export function StakeLadder() {
           return (
             <motion.li
               key={r.label}
-              initial={reduce ? false : { opacity: 0, x: -12 }}
+              initial={reduce ? { opacity: 0 } : { opacity: 0, x: -12 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{
                 delay: reduce ? 0 : i * 0.05,
@@ -217,7 +218,7 @@ export function StakeLadder() {
               <span className="num flex-1 font-semibold">{r.label}</span>
               {here && (
                 <span className="flex items-center gap-1 text-xs font-semibold text-lavender">
-                  <MapPin className="size-3.5" aria-hidden /> You
+                  <MapPin className="anim-float size-3.5" aria-hidden /> You
                 </span>
               )}
               <span className={cn("num text-xs", r.unlocked ? "text-success" : "text-ink-muted")}>

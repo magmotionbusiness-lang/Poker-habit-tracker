@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 export const buttonVariants = cva(
   [
     "relative inline-flex shrink-0 items-center justify-center gap-2 font-semibold tracking-[0.01em] whitespace-nowrap select-none",
-    "transition-[transform,box-shadow,background-color,border-color,opacity] duration-150 ease-out",
-    "active:scale-[0.98] disabled:pointer-events-none disabled:opacity-45",
+    "transition-[transform,box-shadow,background-color,border-color,opacity] duration-200 ease-[cubic-bezier(0.2,0.9,0.25,1.25)]",
+    "active:scale-[0.95] disabled:pointer-events-none disabled:opacity-45",
     "[&_svg]:size-[18px] [&_svg]:shrink-0 [&_svg]:stroke-[1.75]",
   ],
   {

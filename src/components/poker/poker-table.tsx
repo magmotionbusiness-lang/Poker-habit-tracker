@@ -1,13 +1,7 @@
 "use client";
 
-import {
-  AnimatePresence,
-  animate,
-  motion,
-  useMotionValue,
-  useReducedMotion,
-  useTransform,
-} from "framer-motion";
+import { useGentle } from "@/lib/motion/motion";
+import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "framer-motion";
 import { useEffect } from "react";
 import type { TableState } from "@/lib/poker/engine";
 import type { HandAction, HandHistory } from "@/lib/poker/hand-types";
@@ -43,14 +37,14 @@ export function PokerTable({
   onSeatClick?: (seat: number) => void;
   className?: string;
 }) {
-  const reduce = useReducedMotion();
+  const reduce = useGentle();
   const n = state.seats.length;
   const heroIndex = Math.max(
     0,
     state.seats.findIndex((s) => s.seat === hand.hero),
   );
   const spring = reduce
-    ? { duration: 0 }
+    ? { duration: 0.35 }
     : { type: "spring" as const, stiffness: 260, damping: 28 };
 
   // Seat k places clockwise from the hero (bottom). Screen y grows downward, so +angle = clockwise.
@@ -98,12 +92,12 @@ export function PokerTable({
             {state.board.map((c, i) => (
               <motion.div
                 key={c}
-                initial={reduce ? false : { opacity: 0, y: -24, rotateY: 90, scale: 0.8 }}
+                initial={reduce ? { opacity: 0 } : { opacity: 0, y: -24, rotateY: 90, scale: 0.8 }}
                 animate={{ opacity: 1, y: 0, rotateY: 0, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={
                   reduce
-                    ? { duration: 0 }
+                    ? { duration: 0.35 }
                     : { duration: 0.35, delay: (i < 3 ? i : 0) * 0.09, ease: [0.4, 0, 0.2, 1] }
                 }
                 style={{ transformPerspective: 400 }}
@@ -147,7 +141,9 @@ export function PokerTable({
                 }
                 animate={{ left: `${p.left}%`, top: `${p.top}%`, opacity: 1, scale: 1 }}
                 exit={reduce ? { opacity: 0 } : { left: "50%", top: "44%", opacity: 0, scale: 0.5 }}
-                transition={reduce ? { duration: 0 } : { duration: 0.32, ease: [0.4, 0, 0.2, 1] }}
+                transition={
+                  reduce ? { duration: 0.35 } : { duration: 0.32, ease: [0.4, 0, 0.2, 1] }
+                }
                 aria-hidden
               >
                 <ChipStack />
@@ -183,10 +179,10 @@ export function PokerTable({
                   Array.from({ length: holeCount }, (_, i) => (
                     <motion.div
                       key={`${s.seat}-c${i}`}
-                      initial={reduce ? false : { y: 8, opacity: 0 }}
+                      initial={reduce ? { opacity: 0 } : { y: 8, opacity: 0 }}
                       animate={{ y: 0, opacity: 1, rotate: (i - (holeCount - 1) / 2) * 5 }}
                       exit={reduce ? { opacity: 0 } : { y: -20, opacity: 0, scale: 0.7 }}
-                      transition={reduce ? { duration: 0 } : { duration: 0.25, delay: i * 0.04 }}
+                      transition={reduce ? { duration: 0.35 } : { duration: 0.25, delay: i * 0.04 }}
                     >
                       {showCards ? (
                         <PlayingCard card={s.cards![i]} size="xs" fourColor={fourColor} />
@@ -247,7 +243,7 @@ export function PokerTable({
               {net !== undefined && net !== 0 ? (
                 <motion.span
                   key="net"
-                  initial={reduce ? false : { opacity: 0, y: -4 }}
+                  initial={reduce ? { opacity: 0 } : { opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
                   className={cn(
                     "num mt-1 rounded-full bg-black/60 px-2 text-[10px] font-bold",
@@ -259,7 +255,7 @@ export function PokerTable({
               ) : s.lastAction && s.lastAction.type !== "post" ? (
                 <motion.span
                   key={`${s.lastAction.street}-${s.lastAction.type}-${s.lastAction.to ?? 0}`}
-                  initial={reduce ? false : { opacity: 0, y: -4 }}
+                  initial={reduce ? { opacity: 0 } : { opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                   className="mt-1 rounded-full bg-black/60 px-2 text-[10px] font-semibold text-lavender-pale"
@@ -333,7 +329,7 @@ function PotCounter({
   const mv = useMotionValue(value);
   const text = useTransform(mv, (v) => fmt(Math.round(v)));
   useEffect(() => {
-    const controls = animate(mv, value, { duration: reduce ? 0 : 0.45, ease: "easeOut" });
+    const controls = animate(mv, value, { duration: reduce ? 0.35 : 0.45, ease: "easeOut" });
     return () => controls.stop();
   }, [mv, value, reduce]);
   if (total === 0) return <div className="h-[22px]" />;

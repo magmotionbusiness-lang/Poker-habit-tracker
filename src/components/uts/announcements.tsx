@@ -109,7 +109,7 @@ export function AnnouncementCard({
         {a.phase === "live" ? "Live now" : announcementLabels[a.type]}
       </Badge>
       <p className="flex items-start gap-2 pr-8 font-display text-xl leading-tight font-semibold">
-        <Megaphone className="mt-0.5 size-5 shrink-0 text-lavender" aria-hidden />
+        <Megaphone className="anim-wiggle mt-0.5 size-5 shrink-0 text-lavender" aria-hidden />
         {a.title}
       </p>
       {a.body && <p className="mt-1.5 text-sm text-ink-muted">{a.body}</p>}

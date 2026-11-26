@@ -44,7 +44,7 @@ export function HabitsScreen() {
 
       <section className="space-y-2">
         <h2 className="eyebrow !font-sans">Your habits</h2>
-        <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
+        <ul className="stagger divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
           {habits.map((h) => (
             <li key={h.id} className="flex min-h-[60px] items-center gap-3 px-4 py-2">
               <button

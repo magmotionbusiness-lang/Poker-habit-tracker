@@ -1,6 +1,8 @@
+import { MOTION_BOOT } from "@/lib/motion/motion";
+
 /**
- * Launch intro: the Stakers mark builds (three rising steps), glows, the wordmark fades
- * in, then the overlay fades away (~1.4s). Pure CSS so it plays before any JS loads, and
+ * Launch intro (~2.8s): the tile fades in out of a blur, three bars rise, a light sweeps
+ * across, the wordmark fades in letter by letter, then everything dissolves into the app. Pure CSS so it plays before any JS loads, and
  * positioned like the iOS launch image (mark centred at 46% height) for a seamless hand-off.
  * Plays once per app launch (sessionStorage); never blocks taps (pointer-events: none).
  */
@@ -11,7 +13,8 @@ export function Intro() {
         // Runs before paint: skip the intro for in-app navigations within the same launch.
         dangerouslySetInnerHTML={{
           __html:
-            "try{if(sessionStorage.getItem('stakers.intro'))document.documentElement.classList.add('no-intro');else sessionStorage.setItem('stakers.intro','1')}catch(e){}",
+            MOTION_BOOT +
+            ";try{var d=document.documentElement.dataset;if(sessionStorage.getItem('stakers.intro'))d.intro='skip';else{sessionStorage.setItem('stakers.intro','1');d.intro='play';setTimeout(function(){d.intro='done'},3100)}}catch(e){}",
         }}
       />
       <div id="intro" aria-hidden>
@@ -24,7 +27,22 @@ export function Intro() {
                 <stop offset="100%" stopColor="#4a2fd0" />
               </linearGradient>
             </defs>
+            <clipPath id="intro-clip">
+              <rect width="64" height="64" rx="14" />
+            </clipPath>
             <rect className="intro-tile" width="64" height="64" rx="14" fill="url(#intro-g)" />
+            <g clipPath="url(#intro-clip)">
+              <rect
+                className="intro-sweep"
+                x="-40"
+                y="-10"
+                width="22"
+                height="90"
+                fill="#fff"
+                fillOpacity="0.35"
+                transform="rotate(20)"
+              />
+            </g>
             <rect
               className="intro-bar intro-bar-1"
               x="13"
@@ -55,7 +73,13 @@ export function Intro() {
               fill="#fff"
             />
           </svg>
-          <p className="intro-word">Stakers</p>
+          <p className="intro-word" aria-label="Stakers">
+            {"Stakers".split("").map((ch, i) => (
+              <span key={i} style={{ animationDelay: `${1.05 + i * 0.07}s` }}>
+                {ch}
+              </span>
+            ))}
+          </p>
           <p className="intro-by">by Up The Stakes</p>
         </div>
       </div>

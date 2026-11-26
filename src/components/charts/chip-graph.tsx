@@ -78,7 +78,9 @@ export function ChipGraph({
             stroke={tokens.lavender}
             strokeWidth={2}
             dot={{ r: 3, fill: tokens.lavenderPale, stroke: tokens.surface, strokeWidth: 2 }}
-            isAnimationActive={false}
+            isAnimationActive
+            animationDuration={1300}
+            animationEasing="ease-out"
           />
         </LineChart>
       </ResponsiveContainer>

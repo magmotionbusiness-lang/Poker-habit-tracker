@@ -27,8 +27,10 @@ export function MilestoneBadges({ longest }: { longest: number }) {
             style={{ animationDelay: `${i * 60}ms` }}
           >
             <span
+              style={on ? ({ "--shine-delay": `${i * 0.35}s` } as React.CSSProperties) : undefined}
               className={cn(
                 "relative grid size-14 place-items-center rounded-2xl border",
+                on && "anim-shine",
                 on
                   ? m >= 100
                     ? "border-gold/50 bg-[radial-gradient(circle_at_30%_25%,rgba(251,191,36,0.35),rgba(30,25,65,0.9))] text-gold shadow-[0_0_22px_rgba(251,191,36,0.35)]"
@@ -37,7 +39,12 @@ export function MilestoneBadges({ longest }: { longest: number }) {
               )}
               aria-label={on ? `${m}-day streak unlocked` : `${m}-day streak locked`}
             >
-              <Icon className="size-6" strokeWidth={1.75} aria-hidden />
+              <Icon
+                className={cn("size-6", on && "anim-float")}
+                style={{ animationDelay: `${i * -0.4}s` }}
+                strokeWidth={1.75}
+                aria-hidden
+              />
             </span>
             <span className={cn("num text-xs font-semibold", on ? "text-ink" : "text-ink-subtle")}>
               {m}d

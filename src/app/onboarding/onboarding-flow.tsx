@@ -1,8 +1,9 @@
 "use client";
 
+import { useGentle } from "@/lib/motion/motion";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, AtSign, KeyRound, Mail } from "lucide-react";
 import { z } from "zod";
 import { Wordmark } from "@/components/brand/stakers-mark";
@@ -57,7 +58,7 @@ const WEEKDAYS = [
 
 export function OnboardingFlow() {
   const router = useRouter();
-  const reduce = useReducedMotion();
+  const reduce = useGentle();
   const prefs = useAppStore((s) => s.prefs);
   const setPrefs = useAppStore((s) => s.setPrefs);
   const [i, setI] = useState(0);
@@ -276,7 +277,7 @@ export function OnboardingFlow() {
         <AnimatePresence mode="wait">
           <motion.section
             key={step}
-            initial={reduce ? false : { opacity: 0, x: 16 }}
+            initial={reduce ? { opacity: 0 } : { opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
             exit={reduce ? undefined : { opacity: 0, x: -16 }}
             transition={{ duration: 0.2 }}
