@@ -3,6 +3,7 @@
 **Build the system. Up the stakes.** — the poker habit, bankroll and hand-review tracker built on
 the Up The Stakes™ system. Mobile-first PWA (iPhone/iPad), works offline and without an account.
 
+- Live app: https://poker-habit-tracker.vercel.app (production builds from `main`; other branches get preview URLs)
 - Product spec & phases: [`docs/BUILD-PROMPT.md`](docs/BUILD-PROMPT.md)
 - Decisions log: [`DECISIONS.md`](DECISIONS.md) · Editable copy: [`CONTENT.md`](CONTENT.md)
 
