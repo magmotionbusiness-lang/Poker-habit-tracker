@@ -30,6 +30,7 @@ const serverSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.preprocess(emptyToUndefined, z.string().optional()),
   VAPID_PRIVATE_KEY: z.preprocess(emptyToUndefined, z.string().optional()),
   VAPID_SUBJECT: z.preprocess(emptyToUndefined, z.string().optional()),
+  CRON_SECRET: z.preprocess(emptyToUndefined, z.string().min(16).optional()),
   EMAIL_PROVIDER: z.preprocess(
     emptyToUndefined,
     z.enum(["none", "kit", "mailchimp", "webhook"]).default("none"),
