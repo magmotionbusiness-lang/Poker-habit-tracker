@@ -16,6 +16,8 @@ import {
   Smartphone,
   Sparkles,
   UserRound,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { CurrencySelect } from "@/components/forms/currency-select";
 import { PageHeader } from "@/components/shell/page-header";
@@ -148,6 +150,18 @@ export function MoreScreen() {
             onChange={(c) => setPrefs({ currency: c })}
           />
         </div>
+        <ListRow
+          icon={prefs.sound === false ? <VolumeX /> : <Volume2 />}
+          label="Sounds"
+          detail="Chips, cards and celebrations"
+          trailing={
+            <Switch
+              checked={prefs.sound !== false}
+              onCheckedChange={(v) => setPrefs({ sound: v })}
+              aria-label="Sounds"
+            />
+          }
+        />
         <ListRow
           label="Four-colour deck"
           detail="Diamonds blue, clubs green"

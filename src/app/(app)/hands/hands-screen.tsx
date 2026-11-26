@@ -11,7 +11,6 @@ import {
   Pencil,
   Plus,
   Search,
-  Spade,
 } from "lucide-react";
 import { HandRow } from "@/components/hands/hand-row";
 import { PageHeader } from "@/components/shell/page-header";
@@ -19,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CardsArt } from "@/components/ui/illustrations";
 import { Input, Label } from "@/components/ui/input";
 import { Sheet } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -112,7 +112,7 @@ export function HandsScreen() {
 
       {hands.length === 0 ? (
         <EmptyState
-          icon={<Spade />}
+          art={<CardsArt />}
           title={handsCopy.emptyTitle}
           body={handsCopy.emptyBody}
           action={

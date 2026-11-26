@@ -1,9 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Pencil, Plus, Snowflake } from "lucide-react";
+import { Pencil, Plus, Snowflake, Trophy } from "lucide-react";
 import { StreakFlame } from "@/components/brand/streak-flame";
 import { Heatmap } from "@/components/charts/heatmap";
+import { CountUp } from "@/components/fx/count-up";
+import { MilestoneBadges } from "@/components/progress/milestone-badges";
+import { FireOnMount } from "@/components/fx/fire-on-mount";
+import { Dialog } from "@/components/ui/dialog";
+import { ProgressBar } from "@/components/ui/progress";
 import { GoalCard } from "@/components/goals/goal-card";
 import { GoalSheet } from "@/components/goals/goal-sheet";
 import { formatDuration } from "@/components/sessions/timer";
@@ -27,6 +32,8 @@ export function ProgressScreen() {
   const currency = useAppStore((s) => s.prefs.currency);
   const goals = useGoalViews(currency);
   const [editing, setEditing] = useState<Goal | null | "new">(null);
+  const dismissed = useAppStore((s) => s.dismissed);
+  const dismiss = useAppStore((s) => s.dismiss);
 
   if (!engine || !goals) {
     return (
@@ -49,31 +56,76 @@ export function ProgressScreen() {
     <div className="space-y-4">
       <PageHeader eyebrow="Consistency" title="Progress" />
 
-      <Card glow>
-        <CardHeader eyebrow="Streak" />
-        <div className="flex items-center justify-between gap-4">
-          <StreakFlame count={streak.current} size="lg" />
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-right">
-            <Mini label="Longest" value={`${streak.longest}d`} />
-            <Mini label="Active days" value={String(streak.totalActiveDays)} />
-            <Mini
-              label="Freezes"
-              value={
-                <span className="inline-flex items-center gap-1">
-                  <Snowflake className="size-3.5 text-lavender" aria-hidden />
-                  {streak.freezesAvailable}/{engine.settings.maxFreezes}
-                </span>
-              }
-            />
-            <Mini label="Study streak" value={studyStreak ? `${studyStreak.current}d` : "—"} />
-          </dl>
+      <Card glow className="overflow-hidden">
+        <div className="flex items-center gap-4">
+          <div className="grid size-24 shrink-0 place-items-center rounded-full bg-[radial-gradient(circle,rgba(124,92,255,0.45),transparent_70%)]">
+            <StreakFlame count={streak.current} size="lg" hideCount />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="eyebrow">Current streak</p>
+            <p className="num font-display text-4xl leading-none font-semibold">
+              <CountUp value={streak.current} />
+              <span className="ml-1 text-lg text-ink-muted">days</span>
+            </p>
+            {next && (
+              <>
+                <ProgressBar
+                  className="mt-3"
+                  value={streak.current / next}
+                  label={`${streak.current} of ${next} days to the next milestone`}
+                />
+                <p className="num mt-1.5 text-xs text-ink-muted">
+                  {next - streak.current} to your {next}-day badge
+                </p>
+              </>
+            )}
+          </div>
         </div>
-        {next && (
-          <p className="mt-4 text-sm text-ink-muted">
-            {next - streak.current} day{next - streak.current === 1 ? "" : "s"} to your {next}-day
-            milestone. Earn a freeze every 7 days.
-          </p>
-        )}
+        <dl className="mt-4 grid grid-cols-4 gap-2 border-t border-line pt-4 text-center">
+          <Mini
+            label="Longest"
+            value={
+              <>
+                <CountUp value={streak.longest} />d
+              </>
+            }
+          />
+          <Mini label="Active" value={<CountUp value={streak.totalActiveDays} />} />
+          <Mini
+            label="Freezes"
+            value={
+              <span className="inline-flex items-center gap-0.5">
+                {Array.from({ length: engine.settings.maxFreezes }, (_, i) => (
+                  <Snowflake
+                    key={i}
+                    className={`size-3.5 ${i < streak.freezesAvailable ? "text-lavender" : "text-ink-subtle/40"}`}
+                    aria-hidden
+                  />
+                ))}
+              </span>
+            }
+          />
+          <Mini
+            label="Study"
+            value={
+              studyStreak ? (
+                <>
+                  <CountUp value={studyStreak.current} />d
+                </>
+              ) : (
+                "—"
+              )
+            }
+          />
+        </dl>
+      </Card>
+
+      <Card>
+        <CardHeader
+          eyebrow="Milestones"
+          action={<Trophy className="size-5 text-lavender" strokeWidth={1.6} aria-hidden />}
+        />
+        <MilestoneBadges longest={streak.longest} />
       </Card>
 
       <Card>
@@ -116,6 +168,53 @@ export function ProgressScreen() {
             !view.progress.achieved && <ManualProgress goal={view.goal} />}
         </div>
       ))}
+
+      {(() => {
+        const reached = goals.find(
+          (v) =>
+            v.progress.achieved &&
+            v.goal.status === "active" &&
+            !dismissed[`goal-reached:${v.goal.id}`],
+        );
+        if (!reached) return null;
+        const key = `goal-reached:${reached.goal.id}`;
+        return (
+          <Dialog
+            open
+            onOpenChange={() => dismiss(key)}
+            title="Goal reached"
+            description={reached.goal.title}
+          >
+            <FireOnMount kind="milestone" />
+            <div className="flex flex-col items-center gap-4 py-2">
+              <div className="pop-in grid size-24 place-items-center rounded-full border border-gold/50 bg-[radial-gradient(circle_at_30%_25%,rgba(251,191,36,0.4),rgba(30,25,65,0.9))] text-gold shadow-[0_0_40px_rgba(251,191,36,0.35)]">
+                <Trophy className="size-10" strokeWidth={1.6} aria-hidden />
+              </div>
+              <p className="text-center text-ink-muted">
+                That&apos;s the system working. Set the next one while the momentum is here.
+              </p>
+              <Button
+                block
+                onClick={async () => {
+                  await saveGoal({
+                    ...reached.goal,
+                    status: "achieved",
+                    achieved_at: new Date().toISOString(),
+                    is_main: false,
+                  });
+                  dismiss(key);
+                  setEditing("new");
+                }}
+              >
+                Set the next goal
+              </Button>
+              <Button variant="ghost" block onClick={() => dismiss(key)}>
+                Later
+              </Button>
+            </div>
+          </Dialog>
+        );
+      })()}
 
       <GoalSheet
         key={editing === "new" ? "new" : (editing?.id ?? "none")}
@@ -235,9 +334,6 @@ function WeekReport({ today, tz }: { today: string; tz: string }) {
           ))}
         </tbody>
       </table>
-      <p className="mt-3 text-xs text-ink-subtle">
-        Best decision of the week joins this card with the Sunday Weekly Review (Phase 3).
-      </p>
     </Card>
   );
 }

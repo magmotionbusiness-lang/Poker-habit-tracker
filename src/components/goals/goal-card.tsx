@@ -3,6 +3,7 @@
 import { Target } from "lucide-react";
 import type { ReactNode } from "react";
 import { Sparkline } from "@/components/charts/sparkline";
+import { CountUp } from "@/components/fx/count-up";
 import { Card, CardHeader } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/progress";
 import { formatGoalValue, type GoalView } from "@/lib/db/goal-hooks";
@@ -59,7 +60,10 @@ export function GoalCard({
       <div className="flex items-end justify-between gap-3">
         <div>
           <p className="num font-display text-[34px] leading-none font-semibold tracking-[-0.02em]">
-            {formatGoalValue(goal, p.current, fmtMoney)}
+            <CountUp
+              value={p.current}
+              format={(v) => formatGoalValue(goal, Math.round(v), fmtMoney)}
+            />
           </p>
           <p className="mt-1.5 text-sm text-ink-muted">
             of {formatGoalValue(goal, goal.target_value, fmtMoney)}

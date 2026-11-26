@@ -47,6 +47,12 @@ export function Heatmap({
               rx={3}
               fill={step < 0 ? "transparent" : heatScale[step]}
               stroke={step < 0 ? "var(--line)" : "none"}
+              className="heat-in"
+              style={{
+                animationDelay: `${col * 22}ms`,
+                transformBox: "fill-box",
+                transformOrigin: "center",
+              }}
             >
               <title>
                 {v === null

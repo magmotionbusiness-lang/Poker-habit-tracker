@@ -14,11 +14,14 @@ export type HabitPreset = {
   sessionLinked?: boolean;
   auto?: "sessions" | "study";
   lifestyle?: boolean;
+  /** Lucide icon name (see components/today/habit-icon.tsx). */
+  icon: string;
 };
 
 export const habitPresets: readonly HabitPreset[] = [
   {
     key: "review_hands",
+    icon: "ScanSearch",
     name: "Review hands",
     hint: "Find the leak, write the rule",
     unit: "count",
@@ -27,6 +30,7 @@ export const habitPresets: readonly HabitPreset[] = [
   },
   {
     key: "study",
+    icon: "BookOpen",
     name: "Study",
     hint: "Solver, course, ranges, group study",
     unit: "minutes",
@@ -36,6 +40,7 @@ export const habitPresets: readonly HabitPreset[] = [
   },
   {
     key: "warm_up",
+    icon: "Sunrise",
     name: "Pre-session warm-up",
     hint: "Focus point, check-in, stop-loss",
     unit: "boolean",
@@ -45,6 +50,7 @@ export const habitPresets: readonly HabitPreset[] = [
   },
   {
     key: "cool_down",
+    icon: "Moon",
     name: "Post-session cool-down",
     hint: "Rate your game, tag hands to review",
     unit: "boolean",
@@ -53,6 +59,7 @@ export const habitPresets: readonly HabitPreset[] = [
   },
   {
     key: "log_session",
+    icon: "ClipboardCheck",
     name: "Log every session",
     hint: "Completes itself when you log",
     unit: "boolean",
@@ -62,6 +69,7 @@ export const habitPresets: readonly HabitPreset[] = [
   },
   {
     key: "sleep",
+    icon: "BedDouble",
     name: "Sleep 7h+",
     hint: "Rested brain, better decisions",
     unit: "boolean",
@@ -70,6 +78,7 @@ export const habitPresets: readonly HabitPreset[] = [
   },
   {
     key: "gym",
+    icon: "Dumbbell",
     name: "Train",
     hint: "Gym, run, anything",
     unit: "boolean",
@@ -78,6 +87,7 @@ export const habitPresets: readonly HabitPreset[] = [
   },
   {
     key: "no_alcohol",
+    icon: "GlassWater",
     name: "No alcohol at the table",
     hint: "Clear head, A-game",
     unit: "boolean",
@@ -87,6 +97,7 @@ export const habitPresets: readonly HabitPreset[] = [
   },
   {
     key: "meditate",
+    icon: "Leaf",
     name: "Meditate",
     hint: "10 minutes of calm",
     unit: "boolean",

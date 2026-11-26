@@ -58,7 +58,7 @@ test.describe("Phase 2: hands", () => {
     await page.getByLabel("Quick note").fill("AKo, 3-bet pot, lost on the river. Check later.");
     await page.getByRole("button", { name: "Save note" }).click();
     await expect(page).toHaveURL(/\/hands$/);
-    await page.getByRole("tab", { name: /Quick notes to finish/ }).click();
+    await page.getByRole("tab", { name: /To finish/ }).click();
     await expect(
       page.getByText("AKo, 3-bet pot, lost on the river.", { exact: false }).first(),
     ).toBeVisible();
@@ -102,5 +102,24 @@ test.describe("Phase 2: hands", () => {
     await tap(page, page.getByRole("button", { name: "Step forward" }));
     await tap(page, page.getByRole("button", { name: "End", exact: true }));
     await expect(page.getByText(/Showdown|Hand over/).first()).toBeVisible();
+  });
+  test("express log: a hand in a few taps between hands", async ({ page }) => {
+    await guest(page, true);
+    await page.goto("/hands");
+    await page.getByRole("button", { name: "Log hand" }).click();
+    await tapInSheet(page, page.getByRole("button", { name: "Ace of spades" }));
+    await tapInSheet(page, page.getByRole("button", { name: "Queen of spades" }));
+    await tapInSheet(
+      page,
+      page
+        .getByRole("group", { name: "Position" })
+        .getByRole("button", { name: "CO", exact: true }),
+    );
+    await tapInSheet(page, page.getByRole("button", { name: "− Lost" }));
+    await tapInSheet(page, page.getByRole("button", { name: "40bb" }));
+    await tapInSheet(page, page.getByRole("button", { name: "Save hand" }));
+    await page.getByRole("tab", { name: /To finish/ }).click();
+    await expect(page.getByText(/CO · SRP/).first()).toBeVisible();
+    await expect(page.getByText("−$80").first()).toBeVisible();
   });
 });

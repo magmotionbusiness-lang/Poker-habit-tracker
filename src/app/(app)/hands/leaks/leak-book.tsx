@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowLeft, BookMarked, Check, Plus } from "lucide-react";
+import { ArrowLeft, Check, Plus } from "lucide-react";
 import { Chips } from "@/components/forms/chips";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { BookArt } from "@/components/ui/illustrations";
 import { Label, Textarea } from "@/components/ui/input";
 import { Sheet } from "@/components/ui/sheet";
 import { toast } from "@/components/ui/toaster";
@@ -49,7 +50,7 @@ export function LeakBook() {
 
       {groups.length === 0 ? (
         <EmptyState
-          icon={<BookMarked />}
+          art={<BookArt />}
           title="No leaks written yet."
           body="Review a hand and finish with “Next time in this spot I will…”. That rule lands here and resurfaces on your Today screen."
           action={

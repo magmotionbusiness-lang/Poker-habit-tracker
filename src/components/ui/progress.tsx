@@ -24,17 +24,19 @@ export function ProgressBar({
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.round(v * 100)}
-      className={cn("h-2 w-full overflow-hidden rounded-full bg-field", className)}
+      className={cn("relative h-2 w-full overflow-hidden rounded-full bg-field", className)}
     >
       <div
         className={cn(
-          "h-full rounded-full transition-[width] duration-500 ease-out",
+          "progress-grow relative h-full overflow-hidden rounded-full",
           tone === "violet"
             ? "bg-[image:var(--gradient-headline)] shadow-[0_0_12px_rgba(124,92,255,0.55)]"
             : "bg-success",
         )}
         style={{ width: `${v * 100}%` }}
-      />
+      >
+        {v > 0 && v < 1 && <span className="progress-shimmer" aria-hidden />}
+      </div>
     </div>
   );
 }

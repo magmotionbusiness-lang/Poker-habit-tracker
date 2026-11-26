@@ -18,6 +18,10 @@ import { formatClock, formatDuration } from "@/components/sessions/timer";
 import { InstallPrompt } from "@/components/shell/install-prompt";
 import { PageHeader } from "@/components/shell/page-header";
 import { HabitRingButton } from "@/components/today/habit-ring-button";
+import { TodayHero } from "@/components/today/today-hero";
+import { FireOnMount } from "@/components/fx/fire-on-mount";
+import { celebrate } from "@/lib/store/celebrate";
+import { play } from "@/lib/sfx/sfx";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
@@ -84,32 +88,33 @@ export function TodayScreen() {
   const runStart = addDays(today, -(streak.current - (streak.todayDone ? 1 : 0)));
   const milestoneKey = milestone ? `milestone:${milestone}:${runStart}` : null;
 
-  async function tap(day: (typeof habits)[number]) {
+  async function tap(day: (typeof habits)[number], el: HTMLElement | null) {
     const h = day.habit;
     if (h.unit === "minutes") return open("study");
-    haptic();
-    await setHabitValue(
-      h.id,
-      today,
-      h.unit === "boolean" ? (day.value >= 1 ? 0 : 1) : day.value + 1,
-    );
+    const next = h.unit === "boolean" ? (day.value >= 1 ? 0 : 1) : day.value + 1;
+    await setHabitValue(h.id, today, next);
+    const completesHabit = !day.complete && next >= day.target;
+    if (!completesHabit) return play(next > day.value ? "toggle" : "tap");
+    const completesDay =
+      day.applies && todayInput.required > 0 && todayInput.done + 1 === todayInput.required;
+    // Day complete → big burst from the hero ring; otherwise a small burst from the habit.
+    if (completesDay) celebrate("day", document.getElementById("today-hero"));
+    else celebrate("small", el);
   }
 
   return (
     <div className="space-y-4">
-      <PageHeader
-        eyebrow={greeting}
-        title="Today"
-        action={
-          <Link
-            href="/progress"
-            aria-label={`${streak.current}-day streak. Streak details`}
-            className="rounded-full p-1"
-          >
-            <StreakFlame count={streak.current} />
-          </Link>
-        }
-      />
+      <PageHeader eyebrow={greeting} title="Today" />
+
+      <div id="today-hero">
+        <TodayHero
+          done={todayInput.done}
+          required={todayInput.required}
+          streak={streak.current}
+          freezes={streak.freezesAvailable}
+          maxFreezes={engine.settings.maxFreezes}
+        />
+      </div>
 
       <RunningBanner />
       <StudyTimerBanner />
@@ -145,42 +150,27 @@ export function TodayScreen() {
       <InstallPrompt />
 
       <Card>
-        <CardHeader
-          eyebrow="Today's habits"
-          action={
-            <span className="num text-sm text-ink-muted">
-              {todayInput.required
-                ? `${Math.min(todayInput.done, todayInput.required)}/${todayInput.required} to count`
-                : "Rest day"}
-            </span>
-          }
-        />
         {habits.length === 0 ? (
           <div className="py-2 text-center">
             <p className="text-sm text-ink-muted">
-              No habits yet — that&apos;s the system&apos;s engine.
+              Pick a few small daily habits — they&apos;re the engine.
             </p>
             <Button className="mt-3" size="sm" asChild>
               <Link href="/more/habits">Pick your habits</Link>
             </Button>
           </div>
         ) : (
-          <ul className="grid grid-cols-3 gap-2">
+          <ul className="grid grid-cols-3 gap-x-2 gap-y-4">
             {habits.map((d) => (
               <li key={d.habit.id}>
                 <HabitRingButton
                   day={d}
-                  onTap={() => tap(d)}
+                  onTap={(el) => tap(d, el)}
                   onMinus={() => setHabitValue(d.habit.id, today, d.value - 1)}
                 />
               </li>
             ))}
           </ul>
-        )}
-        {streak.todayDone && (
-          <p className="mt-3 text-center text-sm font-semibold text-success">
-            ✓ Today counts. Streak safe.
-          </p>
         )}
       </Card>
 
@@ -207,6 +197,7 @@ export function TodayScreen() {
           title={`${milestone}-day streak`}
           description="Consistency is the edge most players never build. Keep the system running."
         >
+          <FireOnMount kind="milestone" />
           <div className="flex flex-col items-center gap-4 py-2">
             <div className="grid size-28 place-items-center rounded-full bg-[radial-gradient(circle,rgba(124,92,255,0.45),transparent_70%)]">
               <StreakFlame count={milestone} size="lg" />

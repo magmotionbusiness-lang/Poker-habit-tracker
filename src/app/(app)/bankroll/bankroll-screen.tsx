@@ -4,12 +4,13 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   ArrowDownLeft,
+  CalendarDays,
+  CalendarRange,
   ArrowUpRight,
   ChevronRight,
   Lightbulb,
   Plus,
   SlidersHorizontal,
-  Wallet,
 } from "lucide-react";
 import { LedgerChart } from "@/components/charts/ledger-chart";
 import { MonthlyBars } from "@/components/charts/monthly-bars";
@@ -17,10 +18,10 @@ import { WinLossCalendar } from "@/components/charts/win-loss-calendar";
 import { StatsFilterSheet, type RangeKey } from "@/components/bankroll/stats-filter-sheet";
 import { formatDuration } from "@/components/sessions/timer";
 import { PageHeader } from "@/components/shell/page-header";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ChartArt } from "@/components/ui/illustrations";
 import { Segmented } from "@/components/ui/segmented";
 import { Skeleton } from "@/components/ui/skeleton";
 import { copy } from "@/content/copy";
@@ -93,7 +94,7 @@ export function BankrollScreen() {
       <>
         <PageHeader eyebrow="Results" title="Bankroll" />
         <EmptyState
-          icon={<Wallet />}
+          art={<ChartArt />}
           title={copy.empty.bankroll.title}
           body="Create your bankroll — money set aside for poker only — and every session builds the graph."
           action={<Button onClick={() => open("bankroll")}>Create bankroll</Button>}
@@ -281,13 +282,21 @@ export function BankrollScreen() {
 
       {view.monthly.length > 0 && (
         <Card>
-          <CardHeader eyebrow="Monthly results" />
+          <CardHeader
+            eyebrow="Monthly results"
+            action={
+              <CalendarRange className="size-5 text-lavender" strokeWidth={1.6} aria-hidden />
+            }
+          />
           <MonthlyBars data={view.monthly} currency={ccy} />
         </Card>
       )}
 
       <Card>
-        <CardHeader eyebrow="Up & down days" />
+        <CardHeader
+          eyebrow="Up & down days"
+          action={<CalendarDays className="size-5 text-lavender" strokeWidth={1.6} aria-hidden />}
+        />
         <div className="-mx-1 scrollbar-none overflow-x-auto px-1">
           <WinLossCalendar results={view.daily} today={today} currency={ccy} />
         </div>
@@ -381,13 +390,6 @@ export function BankrollScreen() {
           </ul>
         </section>
       )}
-
-      <p className="px-1 text-xs text-ink-subtle">
-        <Badge variant="outline" size="sm">
-          Note
-        </Badge>{" "}
-        Results include tips & expenses. Money moved in and out never counts as profit.
-      </p>
 
       <StatsFilterSheet
         open={filterOpen}

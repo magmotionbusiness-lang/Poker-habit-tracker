@@ -3,18 +3,22 @@ import type { ReactNode } from "react";
 /** Empty states teach: say why this matters and what to do first. */
 export function EmptyState({
   icon,
+  art,
   title,
   body,
   action,
 }: {
   icon?: ReactNode;
+  /** An illustration (components/ui/illustrations) shown instead of the icon. */
+  art?: ReactNode;
   title: string;
   body: string;
   action?: ReactNode;
 }) {
   return (
     <div className="flex flex-col items-center rounded-xl border border-dashed border-line-accent bg-[radial-gradient(ellipse_at_top,rgba(124,92,255,0.12),transparent_70%)] px-6 py-10 text-center">
-      {icon && (
+      {art && <div className="pop-in mb-4">{art}</div>}
+      {!art && icon && (
         <div className="mb-4 grid size-14 place-items-center rounded-full bg-pill text-lavender shadow-[0_0_32px_rgba(124,92,255,0.35)] [&_svg]:size-6 [&_svg]:stroke-[1.5]">
           {icon}
         </div>

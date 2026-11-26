@@ -7,10 +7,13 @@ import { cn } from "@/lib/utils";
 export function StreakFlame({
   count,
   size = "md",
+  hideCount = false,
   className,
 }: {
   count: number;
   size?: "sm" | "md" | "lg";
+  /** Just the flame (when the number is shown elsewhere). */
+  hideCount?: boolean;
   className?: string;
 }) {
   const reduce = useReducedMotion();
@@ -48,17 +51,19 @@ export function StreakFlame({
           fillOpacity={active ? 0.9 : 0.6}
         />
       </motion.svg>
-      <span
-        className={cn(
-          "num font-display font-semibold tracking-[-0.02em]",
-          size === "sm" && "text-base",
-          size === "md" && "text-xl",
-          size === "lg" && "text-5xl",
-          !active && "text-ink-muted",
-        )}
-      >
-        {count}
-      </span>
+      {!hideCount && (
+        <span
+          className={cn(
+            "num font-display font-semibold tracking-[-0.02em]",
+            size === "sm" && "text-base",
+            size === "md" && "text-xl",
+            size === "lg" && "text-5xl",
+            !active && "text-ink-muted",
+          )}
+        >
+          {count}
+        </span>
+      )}
     </span>
   );
 }

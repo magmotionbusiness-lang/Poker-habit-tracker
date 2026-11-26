@@ -30,6 +30,7 @@ import {
 } from "@/lib/hands/actions";
 import { expressBoard } from "@/lib/hands/express";
 import { haptic } from "@/lib/haptics";
+import { celebrate } from "@/lib/store/celebrate";
 import { useAppStore } from "@/lib/store/app-store";
 
 export function HandView() {
@@ -405,7 +406,7 @@ function ReviewForm({ hand, onDone }: { hand: Hand; onDone: () => void }) {
           try {
             const clean = Object.fromEntries(Object.entries(answers).filter(([, v]) => v.trim()));
             const r = await saveReview(hand, clean, rule.trim() ? { category, text: rule } : null);
-            haptic([10, 30, 10]);
+            celebrate("small");
             toast.success(
               r.rule
                 ? r.rule.times_seen > 1
