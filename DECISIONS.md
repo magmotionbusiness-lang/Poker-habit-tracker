@@ -1,0 +1,123 @@
+# Decisions
+
+Sensible defaults taken while building, so they can be revisited. Newest phase at the bottom.
+
+## Phase 0 — Foundation (2026-11-26)
+
+### Brand: fonts (spec said “looks like Inter” — it isn't)
+
+Extracted from upthestakes.net's `theme-tokens` block and CSS bundle:
+`--font-display: 'Fraunces'`, `--font-body: 'Plus Jakarta Sans'`. Headlines use Fraunces 600,
+`letter-spacing: -0.02em` (hero `-0.03em`), `font-optical-sizing: auto`. Both are **free (OFL)**, so
+no substitute is needed. They're self-hosted via `next/font/local` from `@fontsource-variable`
+files (Fraunces: wght + opsz axes; Jakarta: wght). Reason for local over `next/font/google`: no
+build-time network dependency, identical output on Vercel and locally. Latin subset only for now
+(covers á/é; Hungarian ő/ű fall back to Georgia) — add latin-ext if needed.
+
+### Brand: colours (exact values from the site, not the sampled ones)
+
+| Token                   | Value                             | Site variable                          |
+| ----------------------- | --------------------------------- | -------------------------------------- |
+| canvas                  | `#06060d`                         | `--color-dark` (hero background)       |
+| elevated                | `#0b0b14`                         | `--color-bg`, `theme-color`            |
+| surface / surface-2     | `#10101b` / `#15151f`             | `--color-bg-alt` / `--color-bg-card`   |
+| field                   | `#1a1a26`                         | used in site CSS                       |
+| primary / strong / deep | `#7c5cff` / `#6847f0` / `#5d3fe6` | `--color-accent(-strong/-dark)`        |
+| lavender / pale         | `#a892ff` / `#c5b6ff`             | `--color-accent-light/-pale`           |
+| ink / soft / muted      | `#f6f6fa` / `#c8c8d2` / `#8a8a9a` | `--color-text(-soft)`, `--color-muted` |
+| success / danger / gold | `#34d399` / `#f4544e` / `#fbbf24` | `--color-success/-danger/-gold`        |
+| line                    | `rgba(255,255,255,.08)`           | `--color-border`                       |
+
+Primary button = the site's `linear-gradient(110deg, accent, accent-strong, accent-dark)` with
+`--shadow-accent`. `ink-muted` already passes WCAG AA on every surface, so it was kept as-is;
+`ink-subtle` (`#75758a`) is ours, for captions (AA-large). `src/config/tokens.test.ts` enforces
+contrast and keeps the TS copy of the tokens in sync with `globals.css`. Radii: 8 / 12 (inputs) /
+18 (cards) / 22 (sheets, = site `--radius-lg`). Gold is reserved for milestones.
+
+### Components: shadcn approach without the CLI
+
+shadcn's registry isn't reachable from the build environment, so components are written in the
+same pattern (Radix primitives via the `radix-ui` package + `cva` + `tailwind-merge`, copied into
+`src/components/ui`) and styled from scratch to the tokens. Bottom sheets use `vaul`, toasts `sonner`.
+
+### Next.js 16 with Cache Components
+
+Kept the new defaults (`cacheComponents`, `partialPrefetching`, Turbopack). All app screens are
+static shells that hydrate from on-device state, which is exactly what a local-first PWA wants:
+instant loads and offline-capable pages. Server-side session reads (later phases) go behind
+`<Suspense>` per the Next 16 auth guide. No `proxy.ts` (formerly middleware): the browser Supabase
+client refreshes its own session, so we avoid adding latency to every request.
+
+### Guest mode & local-first data
+
+Device state (mode, prefs) lives in a persisted zustand store (`localStorage`). Phase 1 adds the
+real data layer: **IndexedDB (Dexie) as the source of truth on the device + an outbox queue** that
+syncs to Supabase when online. Every syncable table has a `client_id uuid unique` idempotency key
+so replays after reconnect never duplicate rows. On sign-up, guest data is uploaded through the same
+outbox. Device-level choices: currency is guessed from the locale on first launch.
+
+### Auth on iOS PWA
+
+A magic link tapped in Mail opens **Safari**, whose storage is separate from the Home Screen app,
+so the user would end up signed in in the wrong place. The login screen therefore asks for the
+**6-digit code** from the same email (Supabase OTP); the link still works in a browser. Google
+OAuth works but is less smooth inside an installed iOS app. Apple sign-in deferred to the native
+wrapper (it needs a paid Apple developer account).
+
+### PWA
+
+Hand-written `public/sw.js` (Serwist/next-pwa need webpack; Next 16 builds with Turbopack):
+network-first for pages with cached fallback + `/offline`, cache-first for hashed static assets,
+nothing cached for `/auth/*`, `/api/*` or other origins. Update flow: new SW waits → toast
+“Reload” → `SKIP_WAITING`. iOS splash screens generated for 17 current iPhone/iPad sizes
+(portrait). Push handlers are in place; subscription + sending arrives in Phase 1.
+
+### Money
+
+Integer minor units + ISO currency everywhere (`src/lib/money`). Minor-unit exponents come from a
+**fixed ISO 4217 table, not `Intl`**: browsers disagree (e.g. Chromium reports HUF with 0 decimals,
+ISO says 2) and a storage format must never change under stored integers. Parsing never touches
+floats; FX conversion uses BigInt with rates scaled to 1e-10, rounding half away from zero.
+Negative results are shown with a real minus sign and always with a sign, so win/loss never relies
+on colour.
+
+### Database
+
+Matches spec §6 with these additions/adjustments:
+
+- `user_id` on every user-owned table (also children like `transactions`, `stack_updates`,
+  `habit_logs`) + **composite foreign keys** `(parent_id, user_id)` so a row can never reference
+  another user's parent, even with a forged id. Simple, fast RLS: `user_id = auth.uid()`.
+- Stakes stored as `stakes_sb_minor/stakes_bb_minor/straddle_minor`; added `tips_minor`,
+  `stop_loss_minor`, `max_length_min`, `followed_focus` (needed by §4.3/§4.6).
+- One running session per user (partial unique index). Hands de-dup on `(user_id, site, external_hand_id)`.
+- `profiles.pro_until` for time-boxed Pro from cohort codes; privileged columns (`plan`, `role`,
+  `uts_status`, `cohort_id`) are **not** updatable by users (column-level grants).
+- `fx_rates` daily cache table, `access_code_redemptions`, `goals.is_main`/`title`, `streak_state.total_active_days`/`repair_deadline`.
+- Public hand shares are only reachable through `get_public_hand(slug)` (SECURITY DEFINER) — they
+  can't be listed. `redeem_access_code()` and `delete_my_account()` (real GDPR deletion via cascade)
+  are the only privileged entry points. Leads are written by the server only.
+- Verified on Postgres 16 with `scripts/verify-schema.sh` (also runs in CI). It caught a real bug:
+  inside `SECURITY DEFINER … search_path = ''` functions, `citext =` silently falls back to
+  case-sensitive text comparison — fixed with explicit `lower()`.
+
+### /design visibility
+
+Spec says “dev-only” but also “show me /design on a preview URL”. Resolution: visible in
+development and Vercel **preview** deployments, 404 on **production**.
+
+### Navigation
+
+Five equal tabs (Today · Bankroll · Hands · Progress · More) and the “+” floating at bottom-right
+above the tab bar (thumb zone), rather than a centre tab, so the five tabs stay evenly spaced.
+
+### App mark
+
+Placeholder “Stakers” mark = three rising steps (the stake ladder). Not the UTS logo — official
+Up The Stakes assets are TODO(nelson) in `public/brand/`.
+
+## Open questions for Máté / Nelson
+
+- Final app name (Stakers?) and whether the app mark should carry the UTS logo.
+- Which email provider Nelson uses (Kit / Mailchimp / other) — adapter is picked by env var.
+- Approval of the program copy pulled from the site (`src/content/program.ts`) and of the Up The Stakes hub wording.
