@@ -303,10 +303,31 @@ Rendered on a canvas at 1080×1920 (story) or 1080×1350 (post), shared with the
 (or saved). "Hide amounts" removes every figure, including amounts inside goal titles. The
 "Tracked with Stakers · by Up The Stakes" mark is always on (removing it is a Pro option, Phase 5).
 
-### Not yet in Phase 3 (next)
+### Admin panel (`/admin`)
 
-Admin panel (announcements, Daily Hand approval, access codes, lead export, broadcast push),
-announcement push offsets, cohort-specific audiences.
+Visible in More only to `profiles.role = 'admin'` (set it in Supabase → Table editor → profiles).
+Overview (players, DAU/WAU/MAU, students/alumni, streak distribution, leads by source — all from
+the `admin_stats()` function, aggregates only), announcements (create/edit/publish/delete, local
+time in, UTC stored; buttons may link in-app), Daily Hand (schedule the 30 samples as drafts,
+approve per day — players see an approved spot, otherwise the built-in sample), access codes
+(generate, uses, expiry), leads (list + CSV export with consent text, timestamp and UTM) and
+broadcast push to "Up The Stakes news" subscribers by audience. Every admin write is recorded by
+Postgres triggers in `audit_log` (users can neither read nor forge it); broadcasts are audited by
+the API. Clients only gate the UI — RLS and the server enforce the role.
+
+### Not yet (later)
+
+Scheduled announcement pushes (`push_offsets`), cohort-specific audiences, editing program copy
+from the admin panel (still `src/content/program.ts`).
+
+## Motion (2026-11-26)
+
+The app used a blanket `prefers-reduced-motion` rule that cut every animation to 0.01 ms, so on
+phones with Reduce Motion on, nothing faded or filled. Now `<html data-motion>` is `full` or
+`gentle` (More → Animations: Auto / Full / Gentle; Auto follows the phone). Gentle keeps fades,
+ring fills, chart draws, count-ups and glows (non-vestibular) and swaps slides, bounces and idle
+wiggles for fades. Intro state lives in `data-intro` because React resets `<html>` classes on
+hydration. Screens glide in via `app/(app)/template.tsx` (sections rise one after another).
 
 ## Open questions for Máté / Nelson
 

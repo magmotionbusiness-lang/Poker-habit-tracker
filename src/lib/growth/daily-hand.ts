@@ -34,3 +34,45 @@ export function withDailyAnswer<T>(
       .slice(0, 90),
   );
 }
+
+export type DailyHandRow = {
+  id: string;
+  date: string;
+  spot: { game?: string; position?: string; cards?: string; board?: string; situation?: string };
+  options: string[];
+  answer: number;
+  explanation: string;
+  approved: boolean;
+};
+
+/** A stored (admin-approved) Daily Hand row in the shape the card renders. */
+export function spotFromRow(r: DailyHandRow) {
+  return {
+    id: r.id,
+    game: r.spot.game ?? "",
+    position: r.spot.position ?? "",
+    cards: r.spot.cards ?? "",
+    board: r.spot.board ?? "",
+    situation: r.spot.situation ?? "",
+    options: r.options,
+    answer: r.answer,
+    explanation: r.explanation,
+    approved: r.approved,
+  };
+}
+
+/** Give each spot the next free date from `from` on (skipping dates already scheduled). */
+export function scheduleSpots<T>(
+  spots: readonly T[],
+  taken: ReadonlySet<string>,
+  from: ISODate,
+): Array<{ date: ISODate; spot: T }> {
+  const out: Array<{ date: ISODate; spot: T }> = [];
+  let d = from;
+  for (const spot of spots) {
+    while (taken.has(d)) d = addDays(d, 1);
+    out.push({ date: d, spot });
+    d = addDays(d, 1);
+  }
+  return out;
+}

@@ -25,6 +25,7 @@ import { InstallPrompt } from "@/components/shell/install-prompt";
 import { Dialog } from "@/components/ui/dialog";
 import { ListGroup, ListRow } from "@/components/ui/list-row";
 import { Segmented } from "@/components/ui/segmented";
+import { useAdminAccess } from "@/components/admin/use-admin";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toaster";
@@ -64,6 +65,7 @@ export function MoreScreen() {
           label={`${brand.coach.businessTm} with ${brand.coach.name}`}
           detail="The 6-week cohort, free training, waitlist"
         />
+        {mode === "account" && <AdminRow />}
       </ListGroup>
 
       <ListGroup title="Your system">
@@ -247,5 +249,19 @@ export function MoreScreen() {
         </div>
       </Dialog>
     </div>
+  );
+}
+
+/** Shown only to admins (the /admin route and RLS enforce it regardless). */
+function AdminRow() {
+  const access = useAdminAccess();
+  if (access.state !== "admin") return null;
+  return (
+    <ListRow
+      href="/admin"
+      icon={<ShieldCheck />}
+      label="Admin"
+      detail="Announcements, Daily Hand, codes, leads, push"
+    />
   );
 }

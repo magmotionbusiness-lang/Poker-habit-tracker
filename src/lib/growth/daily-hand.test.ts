@@ -39,3 +39,21 @@ describe("daily hand", () => {
     expect(new Set(dailyHands.map((h) => h.id)).size).toBe(30);
   });
 });
+
+describe("daily hand scheduling", () => {
+  it("fills free dates in order", async () => {
+    const { scheduleSpots, spotFromRow } = await import("./daily-hand");
+    const s = scheduleSpots(["a", "b", "c"], new Set(["2026-12-02"]), "2026-12-01");
+    expect(s.map((x) => x.date)).toEqual(["2026-12-01", "2026-12-03", "2026-12-04"]);
+    const spot = spotFromRow({
+      id: "r1",
+      date: "2026-12-01",
+      spot: { game: "NLHE", position: "BTN", cards: "AsKd", board: "", situation: "Folds to you." },
+      options: ["Fold", "Raise"],
+      answer: 1,
+      explanation: "Raise.",
+      approved: true,
+    });
+    expect(spot).toMatchObject({ id: "r1", cards: "AsKd", answer: 1, approved: true });
+  });
+});

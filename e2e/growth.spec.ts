@@ -77,4 +77,12 @@ test.describe("Phase 3: growth layer", () => {
       .evaluate((el) => (el as HTMLElement).click());
     await expect(page.getByText(/Imported 2 sessions/)).toBeVisible();
   });
+
+  test("admin is gated for non-admins", async ({ page }) => {
+    await demo(page);
+    await page.goto("/admin");
+    await expect(page.getByText("Admins only")).toBeVisible();
+    await page.goto("/more");
+    await expect(page.getByRole("link", { name: /^Admin/ })).toHaveCount(0);
+  });
 });

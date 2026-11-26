@@ -26,7 +26,7 @@ Edit on GitHub (pencil icon) → commit → Vercel redeploys in ~1 minute.
 
 Coming in later phases (same principle — one file or an admin screen):
 
-- Admin panel for announcements, Daily Hand approval and access codes — next
+- Announcements, Daily Hand approval and access codes: in the app at `/admin` (admin role)
 - Prices (Free vs Pro) — Phase 5
 - `coach-principles.md` — the AI coach's grounding document — Phase 4
 

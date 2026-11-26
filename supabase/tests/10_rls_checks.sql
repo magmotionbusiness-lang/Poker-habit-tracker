@@ -134,6 +134,44 @@ do $$ begin
   end;
 end $$;
 
+-- Phase 3 admin: non-admins can't read stats, write announcements or forge audit rows;
+-- an admin's writes are audited by trigger.
+reset role;
+update public.profiles set role = 'admin' where id = '00000000-0000-0000-0000-00000000000b';
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
+do $$ begin
+  begin
+    perform public.admin_stats();
+    raise exception 'FAIL: non-admin read admin stats';
+  exception when insufficient_privilege then null; end;
+  begin
+    insert into public.announcements (type, title, starts_at) values ('promo', 'x', now());
+    raise exception 'FAIL: non-admin wrote an announcement';
+  exception when insufficient_privilege then null; end;
+  begin
+    insert into public.audit_log (action) values ('forged');
+    raise exception 'FAIL: user forged an audit row';
+  exception when insufficient_privilege then null; end;
+  assert (select count(*) from public.audit_log) = 0, 'users cannot read the audit log';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000b', false);
+insert into public.announcements (type, title, starts_at, published)
+  values ('workshop', 'Blueprint', now() + interval '2 days', true);
+insert into public.daily_hands (date, spot, options, answer, explanation)
+  values (current_date + 3, '{}', '["a","b"]', 1, 'x');
+update public.daily_hands set approved = true where date = current_date + 3;
+do $$ begin
+  assert (public.admin_stats() ->> 'users')::int = 2, 'admin stats users';
+  assert (select count(*) from public.audit_log
+          where actor_id = '00000000-0000-0000-0000-00000000000b') = 3, 'admin writes audited';
+  assert exists (select 1 from public.audit_log where action = 'update:daily_hands'), 'update audited';
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
+do $$ begin
+  assert (select count(*) from public.announcements) = 1, 'user sees the published announcement';
+end $$;
+
 -- Anonymous visitors: public hand by slug only, no listing.
 reset role;
 set role anon;

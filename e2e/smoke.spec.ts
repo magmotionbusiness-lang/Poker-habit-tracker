@@ -136,5 +136,35 @@ test.describe("platform", () => {
       (await request.post("/api/push/subscribe", { data: {} })).status(),
     );
     expect([401, 503]).toContain((await request.post("/api/push/test")).status());
+    expect([401, 503]).toContain(
+      (await request.post("/api/admin/broadcast", { data: { title: "x" } })).status(),
+    );
+  });
+
+  test("lead endpoint validates input and requires consent", async ({ request }) => {
+    // Own client IP so the per-IP rate limit (5 / 10 min) doesn't leak between projects.
+    const headers = {
+      "x-forwarded-for": `10.9.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`,
+    };
+    expect(
+      (await request.post("/api/leads", { headers, data: { list: "waitlist" } })).status(),
+    ).toBe(400);
+    const noConsent = await request.post("/api/leads", {
+      headers,
+      data: { list: "waitlist", email: "a@b.co", consent: false, consent_text: "x" },
+    });
+    expect(noConsent.status()).toBe(400);
+    // Honeypot filled: pretend success, store nothing.
+    const bot = await request.post("/api/leads", {
+      headers,
+      data: {
+        list: "newsletter",
+        email: "a@b.co",
+        consent: true,
+        consent_text: "x",
+        company: "spam",
+      },
+    });
+    expect(bot.status()).toBe(200);
   });
 });

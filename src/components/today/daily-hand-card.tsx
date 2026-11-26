@@ -1,7 +1,10 @@
 "use client";
 
 import { useGentle } from "@/lib/motion/motion";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
+import { useLiveQuery } from "dexie-react-hooks";
+import { db } from "@/lib/db/db";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Flame, X } from "lucide-react";
 import { PlayingCard } from "@/components/poker/playing-card";
@@ -9,12 +12,41 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { dailyHands } from "@/content/daily-hands";
 import { useSettings, useToday } from "@/lib/db/hooks";
 import { saveSettings } from "@/lib/db/repo";
-import { dailyHandStreak, spotIndexFor, withDailyAnswer } from "@/lib/growth/daily-hand";
+import {
+  type DailyHandRow,
+  dailyHandStreak,
+  spotFromRow,
+  spotIndexFor,
+  withDailyAnswer,
+} from "@/lib/growth/daily-hand";
 import { celebrate } from "@/lib/store/celebrate";
 import { play } from "@/lib/sfx/sfx";
 import { cn } from "@/lib/utils";
 
 const pairs = (s: string) => s.match(/.{2}/g) ?? [];
+
+/** Today's admin-approved spot (signed-in players), cached on the device for offline. */
+function useApprovedSpot(today: string) {
+  const key = `dailyHand:${today}`;
+  const row = useLiveQuery(
+    async () => (await db().meta.get(key))?.value as DailyHandRow | null | undefined,
+    [key],
+  );
+  useEffect(() => {
+    const client = getSupabaseBrowserClient();
+    if (!client || !navigator.onLine) return;
+    void client
+      .from("daily_hands")
+      .select("id,date,spot,options,answer,explanation,approved")
+      .eq("date", today)
+      .eq("approved", true)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (!error) void db().meta.put({ key, value: data ?? null });
+      });
+  }, [key, today]);
+  return row ? spotFromRow(row) : null;
+}
 
 /** One multiple-choice spot per day, with its own small streak. */
 export function DailyHandCard() {
@@ -22,8 +54,9 @@ export function DailyHandCard() {
   const settings = useSettings();
   const { today } = useToday();
   const ref = useRef<HTMLDivElement>(null);
+  const approved = useApprovedSpot(today);
   if (!settings) return null;
-  const spot = dailyHands[spotIndexFor(today, dailyHands.length)];
+  const spot = approved ?? dailyHands[spotIndexFor(today, dailyHands.length)];
   if (!spot) return null;
   const answer = settings.dailyHand[today];
   const picked = answer?.id === spot.id ? answer : undefined;
