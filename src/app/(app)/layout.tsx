@@ -4,6 +4,7 @@ import { ClientOnly } from "@/components/shell/client-only";
 import { GlobalSheets } from "@/components/shell/global-sheets";
 import { GrowthSync } from "@/components/shell/growth-sync";
 import { QuickAdd } from "@/components/shell/quick-add";
+import { TopFade } from "@/components/shell/top-fade";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function ScreenSkeleton() {
@@ -21,10 +22,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
   return (
     <>
       <AppGuard />
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-x-0 top-0 z-30 h-[var(--safe-top)] bg-canvas/85 backdrop-blur-md"
-      />
+      <TopFade />
       <main
         id="main"
         className="px-safe pt-safe mx-auto min-h-dvh max-w-lg pb-[calc(var(--tabbar-height)+var(--safe-bottom)+96px)] md:max-w-2xl"

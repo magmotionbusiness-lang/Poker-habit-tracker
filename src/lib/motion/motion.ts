@@ -31,6 +31,3 @@ export function useMotionMode(): MotionMode {
 
 /** True when big movement should be swapped for fades. */
 export const useGentle = () => useMotionMode() === "gentle";
-
-/** Inline, pre-paint script: sets <html data-motion> from the saved pref so CSS (and the intro) agree. */
-export const MOTION_BOOT = `try{var p=(JSON.parse(localStorage.getItem('stakers.app.v1')||'{}').state||{}).prefs||{};var m=p.motion==='full'||p.motion==='gentle'?p.motion:(matchMedia('${QUERY}').matches?'gentle':'full');document.documentElement.dataset.motion=m}catch(e){document.documentElement.dataset.motion='full'}`;

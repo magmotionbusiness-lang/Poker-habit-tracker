@@ -1,4 +1,4 @@
-import { MOTION_BOOT } from "@/lib/motion/motion";
+import { MOTION_BOOT } from "@/lib/motion/boot";
 
 /**
  * Launch intro (~2.8s): the tile fades in out of a blur, three bars rise, a light sweeps

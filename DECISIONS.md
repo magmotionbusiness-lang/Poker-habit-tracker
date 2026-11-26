@@ -336,11 +336,17 @@ hydration. Screens glide in via `app/(app)/template.tsx` (sections rise one afte
 - Approval of the program copy pulled from the site (`src/content/program.ts`) and of the Up The Stakes hub wording.
 - Reminder wording and default time (19:00) — `src/content/notifications.ts`.
 
-### Ambient background
+### Background (matches upthestakes.net)
 
-`components/shell/ambient-background.tsx`: a fixed layer behind everything with drifting aurora
-glows (colour story per tab: Today violet/magenta, Bankroll emerald, Hands cyan, Progress gold),
-a slow light sweep, a faint drifting pattern of card suits, rising sparkles and film grain.
-CSS-only (transform/opacity, no blur filters) to stay smooth on iPhone; tab colours cross-fade
-via `@property`. `<body>` is transparent (`<html>` keeps the canvas colour) and cards are 80%
-opaque so the glow shows through. Gentle motion: glows breathe in place, sparkles twinkle.
+`components/shell/ambient-background.tsx` mirrors the site's hero: `--color-bg` base (#0b0b14),
+a soft violet glow from the top, two blurred violet glows (`hero__glow`) that breathe slowly,
+and the site's faint 56px grid (`hero__grid`) fading out. One brand violet everywhere — an
+earlier multi-colour "aurora" version was rejected as not on-brand. `<body>` is transparent so
+the fixed layer shows; cards are 80% opaque.
+
+Status bar: no band at the top of a page (the background runs under the clock); once content
+scrolls beneath it, a soft blurred fade appears (`top-fade.tsx`) — never a hard edge.
+
+The inline boot script (motion setting + intro once per launch) lives in `lib/motion/boot.ts`:
+constants imported from a "use client" module are references on the server, which had silently
+broken the script (the intro replayed on every reload).

@@ -10,3 +10,12 @@ describe("motion policy", () => {
     expect(effectiveMotion("gentle", false)).toBe("gentle");
   });
 });
+
+describe("boot script", () => {
+  it("is plain script text that sets data-motion", async () => {
+    const { MOTION_BOOT } = await import("./boot");
+    expect(typeof MOTION_BOOT).toBe("string");
+    expect(() => new Function(MOTION_BOOT)).not.toThrow();
+    expect(MOTION_BOOT).toContain("dataset.motion");
+  });
+});
