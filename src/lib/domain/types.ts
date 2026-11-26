@@ -168,3 +168,63 @@ export type Goal = Row & {
   status: "active" | "achieved" | "archived";
   achieved_at: Timestamp | null;
 };
+
+/* ---------- Hands (Phase 2) ---------- */
+
+export type ReviewStatus = "unreviewed" | "reviewed" | "lesson";
+export type RuleCategory =
+  | "preflop"
+  | "flop"
+  | "turn"
+  | "river"
+  | "exploitative"
+  | "multiway"
+  | "mental"
+  | "bankroll"
+  | "other";
+
+/** Answers to the guided review template (labels live in content/review.ts). */
+export type HandReview = {
+  answers: Record<string, string>;
+  rule: { category: RuleCategory; text: string; rule_id: string | null } | null;
+  reviewed_at: Timestamp;
+};
+
+export type Hand = Row & {
+  session_id: string | null;
+  source: "import" | "manual" | "quick_note";
+  site: string | null;
+  external_hand_id: string | null;
+  played_at: Timestamp;
+  game: string;
+  stakes: string | null;
+  hero_position: string | null;
+  hero_cards: string | null;
+  /** Normalised hand (see lib/poker/hand-types). Null for quick notes. */
+  ohh: import("@/lib/poker/hand-types").HandHistory | null;
+  quick_note: string | null;
+  net_minor: number | null;
+  currency: string | null;
+  net_bb: number | null;
+  pot_bb: number | null;
+  auto_tags: string[];
+  user_tags: string[];
+  starred: boolean;
+  review_status: ReviewStatus;
+  review: HandReview | null;
+  share_slug: string | null;
+  is_public: boolean;
+  /** Custom sections this hand is in. */
+  collection_ids: string[];
+};
+
+export type HandCollection = Row & { name: string; emoji: string | null; sort_order: number };
+
+export type Rule = Row & {
+  category: RuleCategory;
+  text: string;
+  status: "working" | "fixed";
+  times_seen: number;
+  last_surfaced_at: Timestamp | null;
+  hand_ids: string[];
+};

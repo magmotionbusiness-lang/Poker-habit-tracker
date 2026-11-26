@@ -79,6 +79,20 @@ do $$ begin
   assert (select value from public.habit_logs) = 35, 'habit log upsert on (habit_id, date)';
 end $$;
 
+-- Phase 2: hand sections and tombstones.
+insert into public.hand_collections (id, user_id, name) values
+  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-00000000000a', 'Ask Nelson');
+insert into public.hands (id, user_id, source, collection_ids) values
+  ('00000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-00000000000a', 'manual', '{00000000-0000-0000-0000-0000000000c1}');
+delete from public.hands where id = '00000000-0000-0000-0000-0000000000d1';
+do $$ begin
+  assert (select count(*) from public.tombstones where row_id = '00000000-0000-0000-0000-0000000000d1' and table_name = 'hands') = 1, 'delete leaves a tombstone';
+  begin
+    insert into public.tombstones (user_id, table_name, row_id) values (auth.uid(), 'hands', gen_random_uuid());
+    raise exception 'FAIL: users can forge tombstones';
+  exception when insufficient_privilege then null; end;
+end $$;
+
 -- Money must be integers; currency must be ISO-shaped.
 do $$ begin
   begin
@@ -144,6 +158,11 @@ do $$ begin
   assert not exists (select 1 from public.sessions where user_id = '00000000-0000-0000-0000-00000000000a'), 'sessions cascaded';
   assert not exists (select 1 from public.hands where user_id = '00000000-0000-0000-0000-00000000000a'), 'hands cascaded';
   assert exists (select 1 from public.bankrolls where user_id = '00000000-0000-0000-0000-00000000000b'), 'B untouched';
+end $$;
+
+-- Tombstones of a deleted account are cleaned up.
+do $$ begin
+  assert not exists (select 1 from public.tombstones where user_id = '00000000-0000-0000-0000-00000000000a'), 'tombstones cleared on account deletion';
 end $$;
 
 \echo 'ALL SCHEMA CHECKS PASSED'

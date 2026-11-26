@@ -3,6 +3,9 @@ import type {
   Bankroll,
   Goal,
   Habit,
+  Hand,
+  HandCollection,
+  Rule,
   HabitLog,
   PokerSession,
   SessionShortcut,
@@ -39,6 +42,9 @@ export const SYNC_TABLES = [
   "shortcuts",
   "habits",
   "goals",
+  "handCollections",
+  "hands",
+  "rules",
   "transactions",
   "stackUpdates",
   "habitLogs",
@@ -57,6 +63,9 @@ export class StakersDB extends Dexie {
   habitLogs!: EntityTable<HabitLog, "id">;
   studySessions!: EntityTable<StudySession, "id">;
   goals!: EntityTable<Goal, "id">;
+  hands!: EntityTable<Hand, "id">;
+  handCollections!: EntityTable<HandCollection, "id">;
+  rules!: EntityTable<Rule, "id">;
   settings!: EntityTable<SettingsRow, "key">;
   outbox!: EntityTable<OutboxEntry, "seq">;
   fxRates!: EntityTable<FxRateRow, "base">;
@@ -79,6 +88,13 @@ export class StakersDB extends Dexie {
       outbox: "++seq, [table+rowId]",
       fxRates: "[base+quote], day",
       meta: "key",
+    });
+    // Phase 2: hand journal, custom sections, Leak Book.
+    this.version(2).stores({
+      hands:
+        "id, played_at, review_status, session_id, starred, *collection_ids, *user_tags, *auto_tags",
+      handCollections: "id, sort_order",
+      rules: "id, status, category",
     });
   }
 }

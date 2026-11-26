@@ -18,11 +18,18 @@ export const REMOTE: Record<SyncTable, RemoteSpec> = {
   shortcuts: { remote: "session_shortcuts", cursor: null },
   habits: { remote: "habits", cursor: "updated_at" },
   goals: { remote: "goals", cursor: "updated_at" },
+  handCollections: { remote: "hand_collections", cursor: "updated_at" },
+  hands: { remote: "hands", cursor: "updated_at" },
+  rules: { remote: "rules", cursor: "updated_at" },
   transactions: { remote: "transactions", cursor: "updated_at" },
   stackUpdates: { remote: "stack_updates", cursor: "at" },
   habitLogs: { remote: "habit_logs", onConflict: "habit_id,date", cursor: "updated_at" },
   studySessions: { remote: "study_sessions", cursor: "created_at" },
 };
+
+const LOCAL_BY_REMOTE: Record<string, SyncTable> = Object.fromEntries(
+  Object.entries(REMOTE).map(([local, spec]) => [spec.remote, local as SyncTable]),
+);
 
 export type PushPlan = Array<{ table: SyncTable; upserts: string[]; deletes: string[] }>;
 
@@ -147,6 +154,23 @@ export async function pull(client: SupabaseClient): Promise<number> {
       cursors[table] = max;
     }
   }
+  // Deletes made on other devices.
+  const { data: tombs, error: tErr } = await client
+    .from("tombstones")
+    .select("table_name, row_id, deleted_at")
+    .gt("deleted_at", cursors.__tombstones ?? "1970-01-01T00:00:00Z")
+    .order("deleted_at")
+    .limit(5000);
+  if (tErr) throw new Error(`pull tombstones: ${tErr.message}`);
+  for (const t of tombs ?? []) {
+    const local = LOCAL_BY_REMOTE[t.table_name as string];
+    if (local && !pending.has(`${local}:${t.row_id}`)) {
+      await d.table(local).delete(t.row_id as string);
+      count++;
+    }
+    cursors.__tombstones = t.deleted_at as string;
+  }
+
   await d.meta.put({ key: "pullCursors", value: cursors });
   return count;
 }
