@@ -2,7 +2,16 @@
 
 import Link from "next/link";
 import { useMemo, useSyncExternalStore } from "react";
-import { BookOpen, ChevronRight, Play, Quote, ShieldCheck, Sparkles, Timer } from "lucide-react";
+import {
+  BookOpen,
+  ChevronRight,
+  Inbox,
+  Play,
+  Quote,
+  ShieldCheck,
+  Sparkles,
+  Timer,
+} from "lucide-react";
 import { StreakFlame } from "@/components/brand/streak-flame";
 import { GoalCard } from "@/components/goals/goal-card";
 import { formatClock, formatDuration } from "@/components/sessions/timer";
@@ -22,7 +31,10 @@ import {
   useSessions,
   useStackUpdates,
   useStudySessions,
+  useHands,
+  useRules,
 } from "@/lib/db/hooks";
+import { ruleOfTheDay } from "@/lib/hands/leaks";
 import { addDays, localDate, startOfWeek } from "@/lib/dates/dates";
 import { haptic } from "@/lib/haptics";
 import { formatMoney } from "@/lib/money";
@@ -186,7 +198,7 @@ export function TodayScreen() {
       )}
 
       <ThisWeek today={today} tz={engine.tz} />
-      <LastTakeaway />
+      <LastTakeaway today={today} />
 
       {milestone && milestoneKey && !dismissed[milestoneKey] && (
         <Dialog
@@ -314,20 +326,58 @@ function ThisWeek({ today, tz }: { today: string; tz: string }) {
   );
 }
 
-function LastTakeaway() {
+function LastTakeaway({ today }: { today: string }) {
   const sessions = useSessions();
-  const last = sessions?.find((s) => s.status === "finished" && s.takeaway);
-  if (!last) return null;
+  const rules = useRules();
+  const hands = useHands();
+  if (!sessions || !rules || !hands) return null;
+  const rule = ruleOfTheDay(rules, today);
+  const unreviewed = hands.filter((h) => h.review_status === "unreviewed").length;
+  const last = sessions.find((s) => s.status === "finished" && s.takeaway);
   return (
-    <Card>
-      <CardHeader
-        eyebrow="Your last takeaway"
-        action={<Quote className="size-5 text-lavender" strokeWidth={1.6} aria-hidden />}
-      />
-      <p className="font-display text-lg leading-snug text-ink-soft italic">“{last.takeaway}”</p>
-      <p className="mt-2 text-xs text-ink-subtle">
-        Your Leak Book rules will resurface here once hand reviews arrive (Phase 2).
-      </p>
-    </Card>
+    <>
+      {unreviewed > 0 && (
+        <Link href="/hands?list=unreviewed" className="block">
+          <Card className="flex items-center gap-3">
+            <Inbox className="size-5 shrink-0 text-lavender" strokeWidth={1.6} aria-hidden />
+            <span className="flex-1">
+              <span className="num font-display text-xl font-semibold">{unreviewed}</span>{" "}
+              <span className="text-ink-soft">
+                hand{unreviewed === 1 ? "" : "s"} waiting for review
+              </span>
+            </span>
+            <ChevronRight className="size-5 text-ink-subtle" aria-hidden />
+          </Card>
+        </Link>
+      )}
+      {rule ? (
+        <Card>
+          <CardHeader
+            eyebrow="Rule of the day"
+            action={<Quote className="size-5 text-lavender" strokeWidth={1.6} aria-hidden />}
+          />
+          <p className="font-display text-lg leading-snug text-ink italic">“{rule.text}”</p>
+          <p className="mt-2 text-xs text-ink-subtle">
+            From your Leak Book{rule.times_seen > 1 ? ` · seen ${rule.times_seen}×` : ""} ·{" "}
+            <Link href="/hands/leaks" className="text-lavender underline-offset-4 hover:underline">
+              open
+            </Link>
+          </p>
+        </Card>
+      ) : last ? (
+        <Card>
+          <CardHeader
+            eyebrow="Your last takeaway"
+            action={<Quote className="size-5 text-lavender" strokeWidth={1.6} aria-hidden />}
+          />
+          <p className="font-display text-lg leading-snug text-ink-soft italic">
+            “{last.takeaway}”
+          </p>
+          <p className="mt-2 text-xs text-ink-subtle">
+            Review a hand and write a rule — it will resurface here.
+          </p>
+        </Card>
+      ) : null}
+    </>
   );
 }

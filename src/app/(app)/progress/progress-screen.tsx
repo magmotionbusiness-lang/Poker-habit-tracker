@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { saveGoal } from "@/lib/db/actions";
 import { useHabitEngine } from "@/lib/db/derived";
 import { useGoalViews } from "@/lib/db/goal-hooks";
-import { useSessions, useStudySessions } from "@/lib/db/hooks";
+import { useHands, useRules, useSessions, useStudySessions } from "@/lib/db/hooks";
 import { addDays, dateRange, localDate, startOfWeek } from "@/lib/dates/dates";
 import type { Goal } from "@/lib/domain/types";
 import { formatMoney } from "@/lib/money";
@@ -164,9 +164,13 @@ function Mini({ label, value }: { label: string; value: React.ReactNode }) {
 function WeekReport({ today, tz }: { today: string; tz: string }) {
   const sessions = useSessions();
   const study = useStudySessions();
+  const hands = useHands();
+  const rules = useRules();
   const currency = useAppStore((s) => s.prefs.currency);
   const weeks = useMemo(() => {
-    if (!sessions || !study) return null;
+    if (!sessions || !study || !hands || !rules) return null;
+    const inRange = (iso: string | null | undefined, from: string, to: string) =>
+      Boolean(iso) && localDate(iso!, tz) >= from && localDate(iso!, tz) <= to;
     const calc = (from: string, to: string) => {
       const ss = sessions.filter(
         (s) =>
@@ -185,11 +189,13 @@ function WeekReport({ today, tz }: { today: string; tz: string }) {
         net,
         hourly: ms ? Math.round(net / (ms / 3_600_000)) : null,
         minutes,
+        reviewed: hands.filter((h) => inRange(h.review?.reviewed_at, from, to)).length,
+        rulesWritten: rules.filter((r) => inRange(r.created_at, from, to)).length,
       };
     };
     const thisFrom = startOfWeek(today);
     return { now: calc(thisFrom, today), prev: calc(addDays(thisFrom, -7), addDays(thisFrom, -1)) };
-  }, [sessions, study, today, tz, currency]);
+  }, [sessions, study, hands, rules, today, tz, currency]);
   if (!weeks) return null;
   const money = (m: number, signed = true) =>
     formatMoney({ minor: m, currency }, { signed, trimZeroCents: true });
@@ -203,6 +209,8 @@ function WeekReport({ today, tz }: { today: string; tz: string }) {
       weeks.prev.hourly === null ? "—" : `${money(weeks.prev.hourly)}/h`,
     ],
     ["Study", `${weeks.now.minutes} min`, `${weeks.prev.minutes} min`],
+    ["Hands reviewed", String(weeks.now.reviewed), String(weeks.prev.reviewed)],
+    ["Rules written", String(weeks.now.rulesWritten), String(weeks.prev.rulesWritten)],
   ];
   return (
     <Card>
@@ -228,8 +236,7 @@ function WeekReport({ today, tz }: { today: string; tz: string }) {
         </tbody>
       </table>
       <p className="mt-3 text-xs text-ink-subtle">
-        Hands reviewed, rules written and best decision of the week join this card with hand reviews
-        (Phase 2) and the Sunday Weekly Review (Phase 3).
+        Best decision of the week joins this card with the Sunday Weekly Review (Phase 3).
       </p>
     </Card>
   );

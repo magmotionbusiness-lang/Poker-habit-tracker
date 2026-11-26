@@ -3,8 +3,11 @@ import type {
   Goal,
   Habit,
   HabitLog,
+  Hand,
+  HandCollection,
   ISODate,
   PokerSession,
+  Rule,
   SessionShortcut,
   StackUpdate,
   StudySession,
@@ -13,6 +16,7 @@ import type {
 } from "@/lib/domain/types";
 import { addDays, dateRange, isoWeekday } from "@/lib/dates/dates";
 import { sessionCosts, sessionResult } from "@/lib/stats/session-math";
+import { generateDemoHands } from "./demo-hands";
 
 /**
  * Deterministic demo player for screenshots and Nelson demos (BUILD-PROMPT §9):
@@ -30,6 +34,9 @@ export type DemoData = {
   habitLogs: HabitLog[];
   studySessions: StudySession[];
   goals: Goal[];
+  hands: Hand[];
+  handCollections: HandCollection[];
+  rules: Rule[];
 };
 
 export const DEMO = {
@@ -38,6 +45,7 @@ export const DEMO = {
   startBankroll: 400_000, // $4,000
   endBankroll: 640_000, // $6,400 → 64% of $10k
   goalTarget: 1_000_000,
+  hands: 60,
 };
 
 function rng(seed: number) {
@@ -356,6 +364,9 @@ export function generateDemo(today: ISODate, seed = 42): DemoData {
     },
   ];
 
+  // 60 hands played through the real engine across these sessions (Phase 2).
+  const journal = generateDemoHands(sessions, r, id, DEMO.hands);
+
   return {
     bankrolls: [bankroll],
     transactions,
@@ -367,5 +378,8 @@ export function generateDemo(today: ISODate, seed = 42): DemoData {
     habitLogs,
     studySessions,
     goals,
+    hands: journal.hands,
+    handCollections: journal.collections,
+    rules: journal.rules,
   };
 }

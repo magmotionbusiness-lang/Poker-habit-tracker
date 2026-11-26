@@ -56,3 +56,12 @@ export function useToday(): { today: ISODate; tz: string } {
   const tz = settings?.timezone ?? defaultSettings().timezone;
   return useMemo(() => ({ today: localDate(now, tz), tz }), [now, tz]);
 }
+
+/* Phase 2: hand journal */
+export const useHands = () =>
+  useLiveQuery(() => db().hands.orderBy("played_at").reverse().toArray(), []);
+export const useHand = (id: string | null) =>
+  useLiveQuery(async () => (id ? ((await db().hands.get(id)) ?? null) : null), [id]);
+export const useCollections = () =>
+  useLiveQuery(() => db().handCollections.orderBy("sort_order").toArray(), []);
+export const useRules = () => useLiveQuery(() => db().rules.toArray(), []);

@@ -1,6 +1,7 @@
 import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { StakersDB, setDbForTests } from "@/lib/db/db";
+import { createHabitsFromPresets } from "@/lib/db/actions";
 import { act, replay } from "@/lib/poker/engine";
 import { cards, newHand } from "@/lib/poker/fixtures";
 import {
@@ -80,6 +81,16 @@ describe("hands", () => {
     await deleteCollection(c.id);
     expect((await d.hands.get(hand.id))!.collection_ids).toEqual([]);
     expect(await d.handCollections.count()).toBe(0);
+  });
+
+  it("a first review ticks today's Review-hands habit; re-reviewing doesn't double count", async () => {
+    await createHabitsFromPresets(["review_hands"]);
+    const a = await saveHand(sampleHand());
+    const r = await saveReview(a, {}, null);
+    await saveReview(r.hand, { mental: "edited" }, null);
+    const logs = await d.habitLogs.toArray();
+    expect(logs).toHaveLength(1);
+    expect(logs[0]!.value).toBe(1);
   });
 
   it("review with a rule writes the Leak Book and counts repeats", async () => {

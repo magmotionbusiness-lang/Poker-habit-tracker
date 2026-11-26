@@ -56,6 +56,25 @@ describe("demo player", () => {
     expect(Math.max(...results)).toBeLessThan(total); // no session alone explains the year
   });
 
+  it("has 60 legal, resolved hands with a Leak Book and sections", () => {
+    expect(d.hands).toHaveLength(DEMO.hands);
+    for (const h of d.hands) {
+      expect(h.ohh).not.toBeNull();
+      expect(h.net_minor).not.toBeNull(); // every result computed
+      expect(d.sessions.some((s) => s.id === h.session_id)).toBe(true);
+    }
+    expect(new Set(d.hands.map((h) => h.hero_position)).size).toBeGreaterThan(5);
+    expect(d.hands.some((h) => h.auto_tags.includes("multiway"))).toBe(true);
+    expect(d.hands.some((h) => h.auto_tags.includes("street:showdown"))).toBe(true);
+    expect(d.rules.length).toBeGreaterThanOrEqual(3);
+    for (const r of d.rules) expect(r.hand_ids.length).toBe(r.times_seen);
+    expect(d.handCollections.map((c) => c.name)).toEqual([
+      "Ask Nelson",
+      "River decisions",
+      "Big pots",
+    ]);
+  });
+
   it("is deterministic and uses unique ids", () => {
     expect(generateDemo(today)).toEqual(d);
     const ids = Object.values(d)

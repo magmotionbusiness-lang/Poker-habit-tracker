@@ -56,6 +56,7 @@ export function HandEntry() {
   );
   const running = useRunningSession();
   const sessionId = params.get("session") ?? running?.id ?? null;
+  const fromNote = params.get("from");
 
   return (
     <div className="space-y-5 pt-3">
@@ -76,7 +77,11 @@ export function HandEntry() {
           ]}
         />
       </div>
-      {mode === "note" ? <QuickNote sessionId={sessionId} /> : <FullHand sessionId={sessionId} />}
+      {mode === "note" ? (
+        <QuickNote sessionId={sessionId} />
+      ) : (
+        <FullHand sessionId={sessionId} fromNote={fromNote} />
+      )}
     </div>
   );
 }
@@ -122,7 +127,7 @@ function QuickNote({ sessionId }: { sessionId: string | null }) {
   );
 }
 
-function FullHand({ sessionId }: { sessionId: string | null }) {
+function FullHand({ sessionId, fromNote }: { sessionId: string | null; fromNote: string | null }) {
   const remembered = useHandSetup((s) => s.setup);
   const saveSetup = useHandSetup((s) => s.save);
   const [setup, setSetup] = useState<HandSetup>({ ...DEFAULT_SETUP, ...remembered });
@@ -151,6 +156,7 @@ function FullHand({ sessionId }: { sessionId: string | null }) {
       hand={hand}
       setHand={setHand}
       sessionId={sessionId}
+      fromNote={fromNote}
       onBackToSetup={() => setHand(null)}
     />
   );
@@ -373,11 +379,13 @@ function PlayStep({
   hand,
   setHand,
   sessionId,
+  fromNote,
   onBackToSetup,
 }: {
   hand: HandHistory;
   setHand: (h: HandHistory) => void;
   sessionId: string | null;
+  fromNote: string | null;
   onBackToSetup: () => void;
 }) {
   const router = useRouter();
@@ -481,6 +489,7 @@ function PlayStep({
           hand={hand}
           setHand={setHand}
           sessionId={sessionId}
+          fromNote={fromNote}
           onSaved={(id) => router.push(`/hands/view?id=${id}`)}
           mode={mode}
         />
@@ -493,12 +502,14 @@ function FinishStep({
   hand,
   setHand,
   sessionId,
+  fromNote,
   onSaved,
   mode,
 }: {
   hand: HandHistory;
   setHand: (h: HandHistory) => void;
   sessionId: string | null;
+  fromNote: string | null;
   onSaved: (id: string) => void;
   mode: "money" | "bb";
 }) {
@@ -649,9 +660,11 @@ function FinishStep({
         onClick={async () => {
           setBusy(true);
           try {
+            // Converting a quick note replaces it (same id), keeping the note text.
             const saved = await saveHand(hand, {
+              id: fromNote ?? undefined,
               session_id: sessionId,
-              quick_note: note.trim() || null,
+              quick_note: note.trim() || undefined,
             });
             const final = await updateHand(saved, { user_tags: tags, collection_ids: sectionIds });
             haptic([10, 30, 10]);

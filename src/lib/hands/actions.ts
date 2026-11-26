@@ -3,67 +3,23 @@
 import { z } from "zod";
 import type { Hand, HandCollection, HandReview, Rule, RuleCategory } from "@/lib/domain/types";
 import { db } from "@/lib/db/db";
-import { deleteRows, newId, nowIso, putRow, putRows } from "@/lib/db/repo";
-import { currencyExponent } from "@/lib/money";
-import { handHistorySchema, type HandHistory } from "@/lib/poker/hand-types";
-import { summarize } from "@/lib/poker/tags";
+import { deleteRows, getSettings, newId, nowIso, putRow, putRows } from "@/lib/db/repo";
+import { localDate } from "@/lib/dates/dates";
+import type { HandHistory } from "@/lib/poker/hand-types";
+import { buildHandRow, type HandRowMeta } from "./row";
 
-/** "1/2", "0.25/0.50", "2/5 (10)" in major units. */
-export function stakesText(h: Pick<HandHistory, "sb" | "bb" | "straddle" | "currency">): string {
-  const exp = currencyExponent(h.currency);
-  const major = (m: number) => {
-    const v = m / 10 ** exp;
-    return Number.isInteger(v) ? String(v) : v.toFixed(exp);
-  };
-  return `${major(h.sb)}/${major(h.bb)}${h.straddle ? ` (${major(h.straddle)})` : ""}`;
-}
+export { stakesText } from "./row";
 
 /** Validate, auto-tag and store a hand. Re-saving recomputes every derived field. */
 export async function saveHand(
   hh: HandHistory,
-  meta: {
-    id?: string;
-    session_id?: string | null;
-    played_at?: string;
-    source?: Hand["source"];
-    quick_note?: string | null;
-  } = {},
+  meta: Omit<HandRowMeta, "id" | "at"> & { id?: string } = {},
 ): Promise<Hand> {
-  const valid = handHistorySchema.parse(hh) as HandHistory;
-  const s = summarize(valid);
   const existing = meta.id ? await db().hands.get(meta.id) : undefined;
-  const at = nowIso();
-  const row: Hand = {
-    id: existing?.id ?? newId(),
-    created_at: existing?.created_at ?? at,
-    updated_at: at,
-    session_id: meta.session_id ?? existing?.session_id ?? null,
-    source: meta.source ?? existing?.source ?? "manual",
-    site: existing?.site ?? null,
-    external_hand_id: existing?.external_hand_id ?? null,
-    played_at: meta.played_at ?? existing?.played_at ?? at,
-    game: valid.game,
-    stakes: stakesText(valid),
-    hero_position: s.hero_position,
-    hero_cards: s.hero_cards,
-    ohh: valid,
-    quick_note: meta.quick_note ?? existing?.quick_note ?? null,
-    net_minor: s.net_minor,
-    currency: valid.currency,
-    net_bb: s.net_bb,
-    pot_bb: s.pot_bb,
-    auto_tags: s.auto_tags,
-    user_tags: existing?.user_tags ?? [],
-    starred: existing?.starred ?? false,
-    review_status: existing?.review_status ?? "unreviewed",
-    review: existing?.review ?? null,
-    share_slug: existing?.share_slug ?? null,
-    is_public: existing?.is_public ?? false,
-    collection_ids: existing?.collection_ids ?? [],
-  };
-  // A completed quick note becomes a manual hand.
-  if (row.source === "quick_note") row.source = "manual";
-  return putRow("hands", row);
+  return putRow(
+    "hands",
+    buildHandRow(hh, { ...meta, id: existing?.id ?? newId(), at: nowIso() }, existing),
+  );
 }
 
 /** "AKo, 3-bet pot, lost big on river, check later" — goes to the review queue. */
@@ -203,6 +159,8 @@ export async function saveReview(
     reviewed_at: nowIso(),
   };
   const hand = await updateHand(h, { review, review_status: saved ? "lesson" : "reviewed" });
+  // A first review counts toward today's "Review hands" habit (and the streak).
+  if (h.review_status === "unreviewed") await countReviewHabit();
   return { hand, rule: saved };
 }
 
@@ -212,3 +170,18 @@ export const updateRule = (
 ) => putRow("rules", { ...r, ...patch });
 
 export const deleteRule = (id: string) => deleteRows("rules", [id]);
+
+async function countReviewHabit() {
+  const habit = (await db().habits.toArray()).find((x) => x.key === "review_hands" && x.active);
+  if (!habit) return;
+  const today = localDate(Date.now(), (await getSettings()).timezone);
+  const log = await db().habitLogs.where("[habit_id+date]").equals([habit.id, today]).first();
+  await putRow("habitLogs", {
+    id: log?.id ?? newId(),
+    habit_id: habit.id,
+    date: today,
+    value: (log?.value ?? 0) + 1,
+    source: "manual" as const,
+    updated_at: nowIso(),
+  });
+}

@@ -16,6 +16,9 @@ const TABLES: Record<keyof DemoData, SyncTable> = {
   stackUpdates: "stackUpdates",
   habitLogs: "habitLogs",
   studySessions: "studySessions",
+  handCollections: "handCollections",
+  hands: "hands",
+  rules: "rules",
 };
 
 /** Writes the demo player through the normal outbox and remembers its ids for removal. */
@@ -48,6 +51,9 @@ export async function removeDemoData(): Promise<void> {
   const ids = ((await db().meta.get("demoIds"))?.value ?? {}) as Record<string, string[]>;
   // Children first.
   const order: SyncTable[] = [
+    "rules",
+    "hands",
+    "handCollections",
     "studySessions",
     "habitLogs",
     "stackUpdates",
