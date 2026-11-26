@@ -159,15 +159,10 @@ function Running({ session }: { session: PokerSession }) {
         >
           {paused ? <Play aria-hidden /> : <Pause aria-hidden />} {paused ? "Resume" : "Pause"}
         </Button>
-        <Button
-          variant="secondary"
-          onClick={() =>
-            toast("Hand logging arrives in Phase 2", {
-              description: "For now, jot it in the session notes when you end.",
-            })
-          }
-        >
-          <NotebookPen aria-hidden /> Log hand
+        <Button variant="secondary" asChild>
+          <Link href={`/hands/new?session=${session.id}`}>
+            <NotebookPen aria-hidden /> Log hand
+          </Link>
         </Button>
       </div>
       <Button
@@ -423,7 +418,7 @@ function EndSheet({
           Save session
         </Button>
         <p className="text-center text-xs text-ink-subtle">
-          Tag hands to review arrives with hand logging in Phase 2.{" "}
+          Hands you logged this session are waiting in your review queue.{" "}
           <Link className="underline" href="/hands">
             Hands
           </Link>

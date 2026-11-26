@@ -39,17 +39,19 @@ export function PlayingCard({
 }: {
   /** e.g. "As", "Td", "7c" */
   card?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   fourColor?: boolean;
   faceDown?: boolean;
   className?: string;
 }) {
   const dims =
-    size === "sm"
-      ? "h-[46px] w-[33px] rounded-[6px]"
-      : size === "md"
-        ? "h-[64px] w-[46px] rounded-[8px]"
-        : "h-[92px] w-[66px] rounded-[10px]";
+    size === "xs"
+      ? "h-[34px] w-[24px] rounded-[4px]"
+      : size === "sm"
+        ? "h-[46px] w-[33px] rounded-[6px]"
+        : size === "md"
+          ? "h-[64px] w-[46px] rounded-[8px]"
+          : "h-[92px] w-[66px] rounded-[10px]";
   if (faceDown || !card) {
     return (
       <span
@@ -80,14 +82,26 @@ export function PlayingCard({
       <span
         className={cn(
           "font-sans tracking-[-0.04em]",
-          size === "sm" ? "text-[17px]" : size === "md" ? "text-[24px]" : "text-[34px]",
+          size === "xs"
+            ? "text-[13px]"
+            : size === "sm"
+              ? "text-[17px]"
+              : size === "md"
+                ? "text-[24px]"
+                : "text-[34px]",
         )}
       >
         {rankLabel}
       </span>
       <span
         className={cn(
-          size === "sm" ? "text-[14px]" : size === "md" ? "text-[20px]" : "text-[28px]",
+          size === "xs"
+            ? "text-[10px]"
+            : size === "sm"
+              ? "text-[14px]"
+              : size === "md"
+                ? "text-[20px]"
+                : "text-[28px]",
         )}
         aria-hidden
       >

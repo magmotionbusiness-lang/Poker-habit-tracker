@@ -45,7 +45,7 @@ export function QuickAdd() {
   }
   return (
     <>
-      {!pathname.startsWith("/sessions/edit") && (
+      {!/^\/(sessions\/edit|hands\/new|hands\/view)/.test(pathname) && (
         <button
           type="button"
           aria-label="Quick add"
