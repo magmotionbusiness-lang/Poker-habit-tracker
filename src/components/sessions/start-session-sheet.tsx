@@ -96,7 +96,7 @@ export function StartSessionSheet() {
       setFocusPoint("");
       setEnergy(null);
       setSleep(null);
-      play(warmed ? "complete" : "deal");
+      if (warmed) play("check");
       router.push("/session");
       toast(
         `Session started${shortcutLabel ? ` · ${shortcutLabel}` : ""}. ${warmed ? warmUp.doneToast : warmUp.startToast}`,

@@ -77,7 +77,7 @@ export function StakeLadder() {
       void saveSettings({
         ladder: { ...settings.ladder, top: { ...settings.ladder.top, [kind]: maxIndex } },
       });
-      celebrate("milestone", cardRef.current);
+      celebrate("milestone", cardRef.current, { sound: "levelup" });
       toast.success(ladderCopy.movedUp(view.rungs[maxIndex]!.label));
     }
   }, [maxIndex, top, kind, settings, view]);

@@ -21,6 +21,8 @@ export type Prefs = {
   sound: boolean;
   /** Animations: "auto" follows the phone's Reduce Motion (→ gentle), or force full / gentle. */
   motion: MotionPref;
+  /** iPhone: play progress sounds even with the silent switch on (pauses other audio). */
+  soundInSilentMode: boolean;
 };
 export type MotionPref = "auto" | "full" | "gentle";
 
@@ -82,6 +84,7 @@ const initialPrefs: Prefs = {
   haptics: true,
   sound: true,
   motion: "auto",
+  soundInSilentMode: false,
 };
 
 export const useAppStore = create<AppState>()(
@@ -104,7 +107,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: "stakers.app.v1",
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => localStorage),
       // v2 adds prefs.sound, v3 prefs.motion (defaults for existing users).
       migrate: (persisted: unknown) => {

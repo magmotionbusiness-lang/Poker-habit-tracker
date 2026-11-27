@@ -25,7 +25,6 @@ import {
 import { haptic } from "@/lib/haptics";
 import type { Card } from "@/lib/poker/cards";
 import { positionNames } from "@/lib/poker/positions";
-import { play } from "@/lib/sfx/sfx";
 import { celebrate } from "@/lib/store/celebrate";
 import { useAppStore } from "@/lib/store/app-store";
 import { useHandSetup } from "@/lib/store/hand-setup";
@@ -117,8 +116,7 @@ function ExpressForm({ onDone }: { onDone: () => void }) {
       );
       await putRow("hands", row);
       haptic([10, 30, 10]);
-      play("save");
-      if (result === "won") celebrate("small");
+      celebrate("small", null, { sound: "save" });
       toast.success("Hand saved to “To finish”.", {
         action: {
           label: "Review",

@@ -472,7 +472,6 @@ function PlayStep({
               setHand({ ...hand, board: [...hand.board, ...boardPick] });
               setBoardPick([]);
               haptic();
-              play("deal");
             }}
           >
             Deal {nextStreetName}

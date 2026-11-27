@@ -20,7 +20,6 @@ import {
   withDailyAnswer,
 } from "@/lib/growth/daily-hand";
 import { celebrate } from "@/lib/store/celebrate";
-import { play } from "@/lib/sfx/sfx";
 import { cn } from "@/lib/utils";
 
 const pairs = (s: string) => s.match(/.{2}/g) ?? [];
@@ -68,8 +67,7 @@ export function DailyHandCard() {
     await saveSettings({
       dailyHand: withDailyAnswer(settings.dailyHand, today, { id: spot.id, choice: i, correct }),
     });
-    if (correct) celebrate("small", ref.current);
-    else play("fold");
+    if (correct) celebrate("small", ref.current, { sound: "correct" });
   }
 
   return (

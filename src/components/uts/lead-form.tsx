@@ -9,7 +9,6 @@ import { brand } from "@/config/brand";
 import { type LeadListKey, uts } from "@/content/uts";
 import { type LeadResult, submitLead } from "@/lib/growth/leads-client";
 import { celebrate } from "@/lib/store/celebrate";
-import { play } from "@/lib/sfx/sfx";
 import { cn } from "@/lib/utils";
 
 /**
@@ -39,7 +38,6 @@ export function LeadForm({ list, glow }: { list: LeadListKey; glow?: boolean }) 
     });
     setState(r);
     if (r === "ok") celebrate("day", e.currentTarget as Element);
-    else play("error");
   }
 
   if (state === "ok") {

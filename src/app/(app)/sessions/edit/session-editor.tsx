@@ -14,6 +14,7 @@ import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { Input, Label, Textarea } from "@/components/ui/input";
 import { toast } from "@/components/ui/toaster";
+import { celebrate } from "@/lib/store/celebrate";
 import { errorMessage } from "@/lib/errors";
 import { blankSession, deleteSession, saveFinishedSession, upsertVenue } from "@/lib/db/actions";
 import { useRates } from "@/lib/db/derived";
@@ -126,6 +127,7 @@ function Editor({ existing }: { existing: PokerSession | null }) {
       if (needsFx && !next.fx_rate)
         throw new Error(`Add the ${s.currency} → ${bankroll!.currency} rate.`);
       await saveFinishedSession(next);
+      celebrate("small", null, { sound: "save" });
       toast.success(`Session saved · ${money(sessionResult(next), true)}`);
       router.push("/bankroll");
     } catch (e) {

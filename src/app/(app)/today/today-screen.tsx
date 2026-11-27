@@ -101,11 +101,17 @@ export function TodayScreen() {
     const next = h.unit === "boolean" ? (day.value >= 1 ? 0 : 1) : day.value + 1;
     await setHabitValue(h.id, today, next);
     const completesHabit = !day.complete && next >= day.target;
-    if (!completesHabit) return play(next > day.value ? "toggle" : "tap");
+    if (!completesHabit) {
+      if (next > day.value) {
+        play("tick", { progress: next / day.target });
+        haptic(6);
+      }
+      return;
+    }
     const completesDay =
       day.applies && todayInput.required > 0 && todayInput.done + 1 === todayInput.required;
-    // Day complete → big burst from the hero ring; otherwise a small burst from the habit.
-    if (completesDay) celebrate("day", document.getElementById("today-hero"));
+    // Burst from the ring you tapped (where your eyes are): big when it completes the day.
+    if (completesDay) celebrate("day", el);
     else celebrate("small", el);
   }
 

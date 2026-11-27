@@ -350,3 +350,15 @@ scrolls beneath it, a soft blurred fade appears (`top-fade.tsx`) — never a har
 The inline boot script (motion setting + intro once per launch) lives in `lib/motion/boot.ts`:
 constants imported from a "use client" module are references on the server, which had silently
 broken the script (the intro replayed on every reload).
+
+### Sound & celebrations
+
+Sound is reserved for progress (habit ticks with a pitch that rises as the ring fills, habit
+done, day done, milestones, ladder level-up, session/hand/review logged, Daily Hand correct) —
+no click sounds, no poker-table sounds. iOS: audio unlocks on touchend/click/keydown (not
+pointerdown), resumes when the app returns, and More → Sounds → "Play even on silent" sets the
+page's audio session to "playback" (otherwise the silent switch mutes Web Audio; it pauses
+other audio while it plays, so it's opt-in). iPhone haptics use the iOS 18 `<input switch>`
+trick. Confetti is time-based paper physics (flip, sway, drag, terminal velocity), bursts
+upward from what you tapped (falls back to mid-screen if that's scrolled away); gentle motion
+shows a glow bloom with twinkling sparkles.

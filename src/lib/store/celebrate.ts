@@ -31,6 +31,9 @@ const SOUND: Record<CelebrationKind, Sfx> = {
   day: "complete",
   milestone: "milestone",
 };
+
+/** Same burst, a different sound (e.g. "levelup" for the stake ladder, "save" for a log). */
+export type CelebrateOptions = { sound?: Sfx | null };
 const BUZZ: Record<CelebrationKind, number | number[]> = {
   small: 10,
   day: [12, 40, 18],
@@ -38,15 +41,17 @@ const BUZZ: Record<CelebrationKind, number | number[]> = {
 };
 
 /** Origin in viewport fractions; pass an element to burst from its centre. */
-export function celebrate(kind: CelebrationKind, from?: Element | null) {
-  play(SOUND[kind]);
+export function celebrate(kind: CelebrationKind, from?: Element | null, o: CelebrateOptions = {}) {
+  if (o.sound !== null) play(o.sound ?? SOUND[kind]);
   haptic(BUZZ[kind]);
   let origin: { x: number; y: number } | undefined;
   if (from && typeof window !== "undefined") {
     const r = from.getBoundingClientRect();
+    const y = (r.top + r.height / 2) / window.innerHeight;
+    // Off-screen source (scrolled away): burst where the user is looking instead.
     origin = {
-      x: (r.left + r.width / 2) / window.innerWidth,
-      y: (r.top + r.height / 2) / window.innerHeight,
+      x: Math.min(0.9, Math.max(0.1, (r.left + r.width / 2) / window.innerWidth)),
+      y: y < 0.08 || y > 0.92 ? 0.45 : y,
     };
   }
   useCelebrations.getState().fire(kind, origin);

@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input, Label, Textarea } from "@/components/ui/input";
 import { Sheet } from "@/components/ui/sheet";
 import { toast } from "@/components/ui/toaster";
+import { celebrate } from "@/lib/store/celebrate";
 import { errorMessage } from "@/lib/errors";
 import {
   addStackUpdate,
@@ -250,6 +251,7 @@ function Running({ session }: { session: PokerSession }) {
           defaultCashOut={stack}
           onDone={(s) => {
             setSheet(null);
+            celebrate("day", null, { sound: "save" });
             const r = sessionResult(s);
             toast.success(
               `Session saved · ${money(r, true)} · ${formatDuration(sessionDurationMs(s))}`,

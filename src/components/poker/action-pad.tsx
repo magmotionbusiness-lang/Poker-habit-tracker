@@ -5,7 +5,6 @@ import { FastForward, Undo2 } from "lucide-react";
 import { MoneyInput } from "@/components/forms/money-input";
 import { Button } from "@/components/ui/button";
 import { haptic } from "@/lib/haptics";
-import { play } from "@/lib/sfx/sfx";
 import { legalActions, sizePresets, type TableState } from "@/lib/poker/engine";
 import type { HandHistory } from "@/lib/poker/hand-types";
 import { cn } from "@/lib/utils";
@@ -38,7 +37,6 @@ export function ActionPad({
   const presets = sizePresets(state, hand);
   const fire = (k: Kind, to?: number) => {
     haptic();
-    play(k === "fold" ? "fold" : k === "check" ? "toggle" : "chip");
     setSizing(false);
     setCustom(null);
     onAct(k, to);

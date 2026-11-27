@@ -15,6 +15,8 @@ import {
   ShieldCheck,
   Smartphone,
   Sparkles,
+  BellOff,
+  Music2,
   UserRound,
   Volume2,
   VolumeX,
@@ -26,6 +28,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { ListGroup, ListRow } from "@/components/ui/list-row";
 import { Segmented } from "@/components/ui/segmented";
 import { useAdminAccess } from "@/components/admin/use-admin";
+import { play, setIgnoreSilentSwitch, unlockAudio } from "@/lib/sfx/sfx";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toaster";
@@ -155,7 +158,7 @@ export function MoreScreen() {
         <ListRow
           icon={prefs.sound === false ? <VolumeX /> : <Volume2 />}
           label="Sounds"
-          detail="Chips, cards and celebrations"
+          detail="Only for progress: habits, streaks, milestones, logs"
           trailing={
             <Switch
               checked={prefs.sound !== false}
@@ -164,6 +167,36 @@ export function MoreScreen() {
             />
           }
         />
+        {prefs.sound !== false && (
+          <>
+            <ListRow
+              icon={<BellOff />}
+              label="Play even on silent"
+              detail="iPhone's silent switch mutes app sounds. This plays them anyway (pauses music while it plays)."
+              trailing={
+                <Switch
+                  checked={prefs.soundInSilentMode === true}
+                  onCheckedChange={(v) => {
+                    setPrefs({ soundInSilentMode: v });
+                    setIgnoreSilentSwitch(v);
+                    unlockAudio();
+                    play("check");
+                  }}
+                  aria-label="Play even on silent"
+                />
+              }
+            />
+            <ListRow
+              icon={<Music2 />}
+              label="Hear it"
+              detail="Plays the day-complete sound"
+              onClick={() => {
+                unlockAudio();
+                play("complete");
+              }}
+            />
+          </>
+        )}
         <div className="px-4 py-3">
           <p className="mb-1 flex items-center gap-2 font-medium">
             <Sparkles className="anim-pulse size-4 text-lavender" aria-hidden /> Animations

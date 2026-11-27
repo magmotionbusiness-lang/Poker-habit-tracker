@@ -7,7 +7,6 @@ import { decisionInfo, replay, settle, streetMarkers } from "@/lib/poker/engine"
 import { strengthLabel } from "@/lib/poker/evaluator";
 import type { HandHistory, Street } from "@/lib/poker/hand-types";
 import { cn } from "@/lib/utils";
-import { play } from "@/lib/sfx/sfx";
 import { chipLabel } from "./amount";
 import { PokerTable, actionLabel } from "./poker-table";
 
@@ -50,17 +49,6 @@ export function Replayer({
 
   const applied = Math.min(step, hand.actions.length);
 
-  // Table sounds while playing: chips for money in, swish for new cards, whoosh for folds.
-  useEffect(() => {
-    if (!playing) return;
-    const a = hand.actions[applied - 1];
-    if (!a) return;
-    if (a.type === "fold") play("fold");
-    else if (a.type === "check") play("toggle");
-    else play("chip");
-    const next = hand.actions[applied];
-    if (next && next.street !== a.street) setTimeout(() => play("deal"), 450);
-  }, [applied, playing, hand]);
   const state = useMemo(() => replay(hand, applied), [hand, applied]);
   const atEnd = step >= last;
   const result = useMemo(() => (atEnd ? settle(hand) : null), [atEnd, hand]);

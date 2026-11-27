@@ -14,7 +14,6 @@ import {
   type ShareSubject,
   shareContent,
 } from "@/lib/share/cards";
-import { play } from "@/lib/sfx/sfx";
 
 /** Resolved font stack for a utility class (CSS vars inside font stacks don't work in canvas). */
 function fontOf(className: string, fallback: string) {
@@ -176,7 +175,6 @@ export function ShareSheet({
     if (navigator.canShare?.({ files: [file] })) {
       try {
         await navigator.share({ files: [file], title: "Stakers" });
-        play("save");
       } catch {
         /* cancelled */
       }
