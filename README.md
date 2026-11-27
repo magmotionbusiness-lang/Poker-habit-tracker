@@ -50,6 +50,8 @@ pnpm dev                      # http://localhost:3000
 | `/auth/callback`                                             | Supabase auth landing (magic link + OAuth)                                          |
 | `/api/push/subscribe`, `/api/push/test`                      | Save a device's push subscription / send a test (signed-in users)                   |
 | `/api/cron/reminders`                                        | Daily reminder job (needs `CRON_SECRET`)                                            |
+| `/progress/journey`                                          | Your poker story, monthly report vs last month, year in poker (shareable)           |
+| `/hands/players`, `/hands/players/view`                      | Player database: styles, reads with evidence, record vs each player                 |
 | `/admin`                                                     | Admin panel (role = admin): stats, announcements, Daily Hand, codes, leads, push    |
 | `/api/admin/broadcast`                                       | Admin-only push broadcast (audited)                                                 |
 | `/api/leads`                                                 | Waitlist/newsletter signup → `leads` + email provider (`EMAIL_PROVIDER`)            |

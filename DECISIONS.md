@@ -362,3 +362,21 @@ other audio while it plays, so it's opt-in). iPhone haptics use the iOS 18 `<inp
 trick. Confetti is time-based paper physics (flip, sway, drag, terminal velocity), bursts
 upward from what you tapped (falls back to mid-screen if that's scrolled away); gentle motion
 shows a glow bloom with twinkling sparkles.
+
+## Intelligence layer (2026-11-27)
+
+Driven by the product-strategy document (mapped item by item in `docs/PRODUCT-STRATEGY-MAP.md`).
+Everything is computed on the device from the player's own data, by pure tested modules in
+`src/lib/insights/*` (engine, bankroll-intel, tilt-guard, smart-defaults, reports) and
+`src/lib/players`. Principles: say "associated with", never "causes"; every insight carries a
+sample-size confidence; risk/forecast are ranges and models, never promises; the pattern check is
+neutral ("outside your normal pattern") and dismissible; the bankroll rule warns but never blocks.
+
+- Forecast = bootstrap of the player's own session results (seeded, 2,000 runs, 10/50/90th
+  percentiles) so it carries their real variance. Risk of ruin = exp(−2μB/σ²) per session.
+- Mood (1–5) is a new `sessions.mood` column; opponents sync like other tables (tombstoned);
+  hands link to players via `hands.opponent_ids` (array, one row to sync). Migration
+  `20261130000000_intelligence.sql`, RLS checks extended.
+- Position heatmap and player records come from logged hands only, labelled as such (big pots
+  are over-represented), so they're review guides, not win rates.
+- The old "What's working" card is superseded by the insight engine (same dimensions + more).

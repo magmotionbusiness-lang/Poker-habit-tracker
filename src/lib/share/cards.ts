@@ -11,7 +11,15 @@ export const SHARE_SIZE: Record<ShareFormat, { w: number; h: number }> = {
 export type ShareSubject =
   | { kind: "streak"; days: number; longest: number }
   | { kind: "ladder"; stake: string; ladder: string; bankroll: string | null }
-  | { kind: "goal"; title: string; value: string | null; percent: number };
+  | { kind: "goal"; title: string; value: string | null; percent: number }
+  | {
+      kind: "year";
+      year: string;
+      hours: number;
+      net: string | null;
+      hourly: string | null;
+      winRate: number | null;
+    };
 
 export type ShareContent = {
   eyebrow: string;
@@ -44,6 +52,21 @@ export function shareContent(s: ShareSubject, hideAmounts: boolean): ShareConten
         lines: [
           !hideAmounts && s.bankroll ? `Bankroll ${s.bankroll}` : "Bankroll rules respected",
           "One rung at a time.",
+        ],
+        mark: SHARE_MARK,
+      };
+    case "year":
+      return {
+        eyebrow: `My ${s.year} poker year`,
+        big: `${Math.round(s.hours)}h`,
+        unit: "at the tables",
+        lines: [
+          !hideAmounts && s.net
+            ? `${s.net}${s.hourly ? ` · ${s.hourly}/h` : ""}`
+            : "Every session tracked",
+          s.winRate !== null
+            ? `${Math.round(s.winRate * 100)}% winning sessions`
+            : "Build the system. Up the stakes.",
         ],
         mark: SHARE_MARK,
       };

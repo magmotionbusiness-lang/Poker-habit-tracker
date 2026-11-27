@@ -14,6 +14,7 @@ type RemoteSpec = { remote: string; onConflict?: string; cursor: string | null }
 export const REMOTE: Record<SyncTable, RemoteSpec> = {
   bankrolls: { remote: "bankrolls", cursor: "updated_at" },
   venues: { remote: "venues", cursor: "updated_at" },
+  opponents: { remote: "opponents", cursor: "updated_at" },
   sessions: { remote: "sessions", cursor: "updated_at" },
   shortcuts: { remote: "session_shortcuts", cursor: null },
   habits: { remote: "habits", cursor: "updated_at" },

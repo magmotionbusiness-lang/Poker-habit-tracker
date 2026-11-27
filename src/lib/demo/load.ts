@@ -19,6 +19,7 @@ const TABLES: Record<keyof DemoData, SyncTable> = {
   handCollections: "handCollections",
   hands: "hands",
   rules: "rules",
+  opponents: "opponents",
 };
 
 /** Writes the demo player through the normal outbox and remembers its ids for removal. */

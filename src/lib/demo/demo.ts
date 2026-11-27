@@ -8,6 +8,7 @@ import type {
   ISODate,
   PokerSession,
   Rule,
+  Opponent,
   SessionShortcut,
   StackUpdate,
   StudySession,
@@ -37,6 +38,7 @@ export type DemoData = {
   hands: Hand[];
   handCollections: HandCollection[];
   rules: Rule[];
+  opponents: Opponent[];
 };
 
 export const DEMO = {
@@ -192,6 +194,7 @@ export function generateDemo(today: ISODate, seed = 42): DemoData {
       notes: null,
       tags: [],
       status: "finished",
+      mood: rating === "A" ? 4 + Math.floor(r() * 2) : rating === "C" ? 1 + Math.floor(r() * 2) : 3,
     };
     sessions.push(s);
     // A few stack updates for the chip graph.
@@ -367,6 +370,53 @@ export function generateDemo(today: ISODate, seed = 42): DemoData {
   // 60 hands played through the real engine across these sessions (Phase 2).
   const journal = generateDemoHands(sessions, r, id, DEMO.hands);
 
+  // A small player database: regulars from the demo's casinos, linked to some hands.
+  const created0 = sessions[0]?.started_at ?? new Date().toISOString();
+  const opp = (
+    nickname: string,
+    style: Opponent["style"],
+    avatar: string,
+    notes: string,
+    traits: Opponent["traits"],
+  ): Opponent => ({
+    id: id(),
+    nickname,
+    venue_id: venues[0]?.id ?? null,
+    description: null,
+    tags: [],
+    notes,
+    style,
+    traits,
+    avatar,
+    created_at: created0,
+    updated_at: created0,
+  });
+  const opponents: Opponent[] = [
+    opp(
+      "Mike (seat 4 regular)",
+      "loose_aggressive",
+      "🦈",
+      "Overbets the river when bluffing. Defends BB wide.",
+      {
+        river_bluffs: { level: "high", evidence: 6 },
+        three_bets: { level: "high", evidence: 9 },
+      },
+    ),
+    opp("Anna", "tight_passive", "🪨", "Only raises the nuts on the turn.", {
+      turn_raises_nuts: { level: "high", evidence: 4 },
+    }),
+    opp("Big Tony", "calling_station", "📞", "Calls three streets with any pair. Value bet thin.", {
+      calls_down: { level: "high", evidence: 11 },
+    }),
+    opp("Hoodie kid", "maniac", "🔥", "Straddles every orbit, tilts after losing a big pot.", {}),
+    opp("Dr. Kim", "tight_aggressive", "🎯", "Solid reg. Folds to 4-bets too much.", {
+      folds_to_4bet: { level: "medium", evidence: 3 },
+    }),
+  ];
+  journal.hands.forEach((h, i) => {
+    if (i % 3 === 0) h.opponent_ids = [opponents[i % opponents.length]!.id];
+  });
+
   return {
     bankrolls: [bankroll],
     transactions,
@@ -381,5 +431,6 @@ export function generateDemo(today: ISODate, seed = 42): DemoData {
     hands: journal.hands,
     handCollections: journal.collections,
     rules: journal.rules,
+    opponents,
   };
 }

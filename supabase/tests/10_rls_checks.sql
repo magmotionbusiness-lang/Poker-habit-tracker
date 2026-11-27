@@ -134,6 +134,35 @@ do $$ begin
   end;
 end $$;
 
+-- Intelligence layer: opponents are private, sync deletes, mood is range-checked.
+reset role;
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000b', false);
+insert into public.opponents (id, user_id, nickname, style, traits)
+  values ('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-00000000000b', 'Mike', 'loose_aggressive', '{"river_bluffs":{"level":"high","evidence":6}}');
+do $$ begin
+  begin
+    insert into public.opponents (user_id, nickname, style) values ('00000000-0000-0000-0000-00000000000b', 'x', 'shark');
+    raise exception 'FAIL: unknown style accepted';
+  exception when check_violation then null; end;
+end $$;
+delete from public.opponents where id = '00000000-0000-0000-0000-0000000000f1';
+do $$ begin
+  assert exists (select 1 from public.tombstones where table_name = 'opponents' and row_id = '00000000-0000-0000-0000-0000000000f1'), 'opponent delete tombstoned';
+end $$;
+insert into public.opponents (user_id, nickname) values ('00000000-0000-0000-0000-00000000000b', 'Anna');
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
+do $$ begin
+  assert (select count(*) from public.opponents) = 0, 'A cannot see B''s opponents';
+end $$;
+reset role;
+do $$ begin
+  begin
+    update public.sessions set mood = 9;
+    raise exception 'FAIL: mood out of range accepted';
+  exception when check_violation then null; end;
+end $$;
+
 -- Phase 3 admin: non-admins can't read stats, write announcements or forge audit rows;
 -- an admin's writes are audited by trigger.
 reset role;

@@ -6,6 +6,7 @@ import type {
   Hand,
   HandCollection,
   Rule,
+  Opponent,
   HabitLog,
   PokerSession,
   SessionShortcut,
@@ -38,6 +39,7 @@ export type SettingsRow = UserSettings & { key: "me" };
 export const SYNC_TABLES = [
   "bankrolls",
   "venues",
+  "opponents",
   "sessions",
   "shortcuts",
   "habits",
@@ -66,6 +68,7 @@ export class StakersDB extends Dexie {
   hands!: EntityTable<Hand, "id">;
   handCollections!: EntityTable<HandCollection, "id">;
   rules!: EntityTable<Rule, "id">;
+  opponents!: EntityTable<Opponent, "id">;
   settings!: EntityTable<SettingsRow, "key">;
   outbox!: EntityTable<OutboxEntry, "seq">;
   fxRates!: EntityTable<FxRateRow, "base">;
@@ -95,6 +98,12 @@ export class StakersDB extends Dexie {
         "id, played_at, review_status, session_id, starred, *collection_ids, *user_tags, *auto_tags",
       handCollections: "id, sort_order",
       rules: "id, status, category",
+    });
+    // Intelligence layer: player database; hands link to opponents.
+    this.version(3).stores({
+      opponents: "id, nickname, updated_at",
+      hands:
+        "id, played_at, review_status, session_id, starred, *collection_ids, *user_tags, *auto_tags, *opponent_ids",
     });
   }
 }

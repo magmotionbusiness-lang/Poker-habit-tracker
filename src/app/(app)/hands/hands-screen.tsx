@@ -7,6 +7,7 @@ import {
   BookMarked,
   FolderPlus,
   LayoutGrid,
+  Users,
   NotebookPen,
   Pencil,
   Plus,
@@ -93,6 +94,11 @@ export function HandsScreen() {
         title="Hands"
         action={
           <div className="flex gap-2">
+            <Button size="icon-sm" variant="secondary" aria-label="Players" asChild>
+              <Link href="/hands/players">
+                <Users />
+              </Link>
+            </Button>
             <Button size="icon-sm" variant="secondary" aria-label="Leak Book" asChild>
               <Link href="/hands/leaks">
                 <BookMarked />

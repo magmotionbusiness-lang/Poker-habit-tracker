@@ -56,6 +56,10 @@ export function DataScreen() {
       "habitLogs",
       "studySessions",
       "goals",
+      "hands",
+      "handCollections",
+      "rules",
+      "opponents",
       "settings",
     ] as const;
     const out: Record<string, unknown> = {

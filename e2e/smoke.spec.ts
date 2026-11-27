@@ -50,7 +50,9 @@ test.describe("Phase 1 flows", () => {
     await page.getByLabel("Small blind").fill("1");
     await page.getByLabel("Big blind").fill("2");
     await page.getByLabel("Buy-in", { exact: true }).fill("300");
-    await page.getByRole("button", { name: "Start session", exact: true }).last().click();
+    // $300 against a $2,000 bankroll breaks the standard 30-buy-in rule: warned, not blocked.
+    await expect(page.getByText(/Above your bankroll rule/)).toBeVisible();
+    await page.getByRole("button", { name: "Start anyway", exact: true }).click();
     await expect(page).toHaveURL(/\/session$/);
 
     await page.getByRole("button", { name: "Update stack" }).click();
@@ -65,6 +67,10 @@ test.describe("Phase 1 flows", () => {
     await page.getByRole("button", { name: "End session" }).click();
     await page.getByRole("button", { name: "A-game" }).click();
     await page.getByRole("button", { name: "Save session" }).click();
+    // Session report: result counts up, then one tap for mood.
+    await expect(page.getByText("Session report")).toBeVisible();
+    await page.getByRole("radio", { name: "Great" }).click();
+    await page.getByRole("button", { name: "Done", exact: true }).click();
     await expect(page).toHaveURL(/\/today$/);
 
     await page.goto("/bankroll");

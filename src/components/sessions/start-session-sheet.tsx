@@ -12,7 +12,19 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/components/ui/toaster";
 import { errorMessage } from "@/lib/errors";
 import { completeHabitByKey, saveShortcut, startSession, upsertVenue } from "@/lib/db/actions";
-import { useBankrolls, useRules, useShortcuts, useToday, useVenues } from "@/lib/db/hooks";
+import {
+  useBankrolls,
+  useRules,
+  useSessions,
+  useSettings,
+  useShortcuts,
+  useToday,
+  useVenues,
+} from "@/lib/db/hooks";
+import { useBankrollSummary } from "@/lib/db/derived";
+import { maxBuyIn, usualGame } from "@/lib/insights/smart-defaults";
+import { ruleFor } from "@/components/progress/stake-ladder";
+import { formatMoney } from "@/lib/money";
 import { play } from "@/lib/sfx/sfx";
 import { warmUp } from "@/content/routines";
 import type { SessionShortcut } from "@/lib/domain/types";
@@ -64,6 +76,45 @@ export function StartSessionSheet() {
   const set = (p: Partial<SessionDraft>) => setDraft((d) => ({ ...d, ...p }));
   if (open && draft.bankroll_id === null && first)
     set({ bankroll_id: first.id, currency: first.currency });
+
+  // Smart defaults: the first time the sheet opens, pre-fill your usual game.
+  const sessions = useSessions();
+  const usual = sessions ? usualGame(sessions) : null;
+  const [prefilled, setPrefilled] = useState(false);
+  if (open && !prefilled && sessions) {
+    setPrefilled(true);
+    if (
+      usual &&
+      usual.bankroll_id &&
+      bankrolls.some((b) => b.id === usual.bankroll_id && !b.archived)
+    ) {
+      setDraft((d) => ({
+        ...d,
+        format: usual.format,
+        is_live: usual.is_live,
+        game: usual.game,
+        stakes_sb_minor: usual.stakes_sb_minor,
+        stakes_bb_minor: usual.stakes_bb_minor,
+        currency: usual.currency,
+        bankroll_id: usual.bankroll_id,
+        venue_id: usual.venue_id,
+        venue_name: venues.find((v) => v.id === usual.venue_id)?.name ?? "",
+        buy_in_minor: usual.buy_in_minor,
+      }));
+    }
+  }
+  if (!open && prefilled) setPrefilled(false);
+
+  // Bankroll rule check (from the stake ladder rule): max buy-in for this bankroll.
+  const settings = useSettings();
+  const summary = useBankrollSummary(currency);
+  const br = summary?.items.find((it) => it.bankroll.id === draft.bankroll_id);
+  const rule = settings ? ruleFor(settings, draft.format === "cash" ? "live" : "mtt") : null;
+  const cost = draft.buy_in_minor + (draft.format === "cash" ? 0 : draft.fees_minor);
+  const ruleMax =
+    br && rule && br.bankroll.currency === draft.currency
+      ? maxBuyIn(br.balance, rule.buyIns)
+      : null;
 
   async function go(preset: Partial<SessionDraft>, shortcutLabel?: string) {
     setBusy(true);
@@ -248,8 +299,22 @@ export function StartSessionSheet() {
             onChange={(e) => setLabel(e.target.value)}
           />
         )}
+        {ruleMax !== null && cost > 0 && (
+          <p
+            role="status"
+            className={
+              cost > ruleMax
+                ? "rounded-md bg-gold/10 px-3 py-2.5 text-sm text-gold"
+                : "rounded-md bg-success/10 px-3 py-2.5 text-sm text-success"
+            }
+          >
+            {cost > ruleMax
+              ? `Above your bankroll rule (${rule!.buyIns} buy-ins): max ${formatMoney({ minor: ruleMax, currency: draft.currency }, { trimZeroCents: true })} for this bankroll. You can still start — it's your call.`
+              : `Within your bankroll rule · max ${formatMoney({ minor: ruleMax, currency: draft.currency }, { trimZeroCents: true })}`}
+          </p>
+        )}
         <Button size="lg" block disabled={busy || !draft.bankroll_id} onClick={() => go({})}>
-          Start session
+          {ruleMax !== null && cost > ruleMax ? "Start anyway" : "Start session"}
         </Button>
         {!draft.bankroll_id && (
           <p className="text-center text-sm text-ink-muted">

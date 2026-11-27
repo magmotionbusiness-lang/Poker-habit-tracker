@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AlertTriangle, NotebookPen, Pause, Play, Plus, Square, TrendingUp } from "lucide-react";
 import { ChipGraph } from "@/components/charts/chip-graph";
@@ -26,14 +25,23 @@ import {
   setHabitValue,
 } from "@/lib/db/actions";
 import { db } from "@/lib/db/db";
-import { useNow, useRunningSession, useStackUpdates, useVenues } from "@/lib/db/hooks";
+import {
+  useNow,
+  useRunningSession,
+  useSessions,
+  useStackUpdates,
+  useToday,
+  useVenues,
+} from "@/lib/db/hooks";
 import { localDate } from "@/lib/dates/dates";
 import type { GameRating, PokerSession } from "@/lib/domain/types";
 import { formatMoney } from "@/lib/money";
 import { haptic } from "@/lib/haptics";
-import { sessionDurationMs, sessionResult, stakesLabel } from "@/lib/stats/session-math";
+import { sessionDurationMs, stakesLabel } from "@/lib/stats/session-math";
+import { tiltSignals } from "@/lib/insights/tilt-guard";
 import { getSettings } from "@/lib/db/repo";
 import { useUi } from "@/lib/store/ui-store";
+import { useSessionReport } from "@/lib/store/report-store";
 
 export function LiveSession() {
   const session = useRunningSession();
@@ -54,12 +62,12 @@ export function LiveSession() {
 }
 
 function Running({ session }: { session: PokerSession }) {
-  const router = useRouter();
   const openSheet = useUi((s) => s.open);
   const now = useNow(1000);
   const updates = useStackUpdates(session.id) ?? [];
   const venues = useVenues() ?? [];
   const [sheet, setSheet] = useState<"stack" | "addon" | "end" | null>(null);
+  const showReport = useSessionReport((s) => s.show);
   const [amount, setAmount] = useState<number | null>(null);
 
   const ccy = session.currency;
@@ -116,6 +124,8 @@ function Running({ session }: { session: PokerSession }) {
           </div>
         </Card>
       )}
+
+      <PatternCheck session={session} now={now} stack={stack} />
 
       <Card glow>
         <CardHeader
@@ -252,11 +262,7 @@ function Running({ session }: { session: PokerSession }) {
           onDone={(s) => {
             setSheet(null);
             celebrate("day", null, { sound: "save" });
-            const r = sessionResult(s);
-            toast.success(
-              `Session saved · ${money(r, true)} · ${formatDuration(sessionDurationMs(s))}`,
-            );
-            router.push("/today");
+            showReport(s);
           }}
         />
       )}
@@ -426,5 +432,49 @@ function EndSheet({
         </p>
       </div>
     </Sheet>
+  );
+}
+
+/**
+ * "Outside your normal pattern" — neutral notes when tonight drifts from your own history
+ * (re-buys, length, stake, depth of loss, late hour). Dismissible; never judgmental.
+ */
+function PatternCheck({
+  session,
+  now,
+  stack,
+}: {
+  session: PokerSession;
+  now: number;
+  stack: number;
+}) {
+  const sessions = useSessions();
+  const { tz } = useToday();
+  const [dismissed, setDismissed] = useState<string[]>([]);
+  if (!sessions) return null;
+  const signals = tiltSignals(session, sessions, now, tz, stack, formatDuration).filter(
+    (x) => !dismissed.includes(x.id),
+  );
+  if (!signals.length) return null;
+  return (
+    <Card className="pop-in border-line-accent bg-pill/40">
+      <p className="eyebrow mb-1.5">Outside your normal pattern</p>
+      <ul className="space-y-1.5 text-sm text-ink-soft">
+        {signals.map((x) => (
+          <li key={x.id}>· {x.text}</li>
+        ))}
+      </ul>
+      <p className="mt-2 text-xs text-ink-muted">
+        Consider a short break before you decide to continue.
+      </p>
+      <Button
+        size="sm"
+        variant="ghost"
+        className="mt-2 -ml-2"
+        onClick={() => setDismissed((d) => [...d, ...signals.map((x) => x.id)])}
+      >
+        I&apos;m good
+      </Button>
+    </Card>
   );
 }

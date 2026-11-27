@@ -65,3 +65,7 @@ export const useHand = (id: string | null) =>
 export const useCollections = () =>
   useLiveQuery(() => db().handCollections.orderBy("sort_order").toArray(), []);
 export const useRules = () => useLiveQuery(() => db().rules.toArray(), []);
+export const useOpponents = () =>
+  useLiveQuery(() => db().opponents.orderBy("nickname").toArray(), []);
+export const useOpponent = (id: string | null) =>
+  useLiveQuery(() => (id ? db().opponents.get(id) : undefined), [id]);

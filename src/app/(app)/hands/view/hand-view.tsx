@@ -18,13 +18,15 @@ import { Sheet } from "@/components/ui/sheet";
 import { toast } from "@/components/ui/toaster";
 import { sectionEmojis, userTags } from "@/content/hands";
 import { reviewSteps, ruleCategories, ruleStep } from "@/content/review";
-import { useCollections, useHand } from "@/lib/db/hooks";
+import { useCollections, useHand, useOpponents } from "@/lib/db/hooks";
+import { PlayerSheet } from "@/components/players/player-sheet";
 import type { Hand, RuleCategory } from "@/lib/domain/types";
 import { errorMessage } from "@/lib/errors";
 import {
   createCollection,
   deleteHand,
   saveReview,
+  toggleOpponentInHand,
   toggleInCollection,
   updateHand,
 } from "@/lib/hands/actions";
@@ -188,6 +190,8 @@ function View({ hand }: { hand: Hand }) {
       {hand.ohh && <Replayer hand={hand.ohh} mode={mode} fourColor={prefs.fourColorDeck} />}
 
       <Sections hand={hand} />
+
+      <PlayersInHand hand={hand} />
 
       <Card>
         <CardHeader eyebrow="Tags" />
@@ -424,5 +428,58 @@ function ReviewForm({ hand, onDone }: { hand: Hand; onDone: () => void }) {
         {rule.trim() ? "Save review & rule" : "Save review"}
       </Button>
     </div>
+  );
+}
+
+/** Tag who was in the hand — builds your record and reads against each player. */
+function PlayersInHand({ hand }: { hand: Hand }) {
+  const players = useOpponents() ?? [];
+  const [adding, setAdding] = useState(false);
+  const ids = hand.opponent_ids ?? [];
+  return (
+    <Card>
+      <CardHeader
+        eyebrow="Players in this hand"
+        action={
+          <Link href="/hands/players" className="text-xs font-semibold text-lavender">
+            All players →
+          </Link>
+        }
+      />
+      <div className="flex flex-wrap gap-2">
+        {players.map((p) => {
+          const on = ids.includes(p.id);
+          return (
+            <button
+              key={p.id}
+              type="button"
+              aria-pressed={on}
+              onClick={() => toggleOpponentInHand(hand, p.id)}
+              className={
+                on
+                  ? "press flex h-9 items-center gap-1.5 rounded-full border border-primary bg-pill px-3 text-sm font-semibold text-lavender-pale"
+                  : "press flex h-9 items-center gap-1.5 rounded-full border border-line px-3 text-sm text-ink-muted"
+              }
+            >
+              <span aria-hidden>{p.avatar ?? "🎩"}</span> {p.nickname}
+            </button>
+          );
+        })}
+        <button
+          type="button"
+          onClick={() => setAdding(true)}
+          className="press flex h-9 items-center gap-1 rounded-full border border-dashed border-line-accent px-3 text-sm font-semibold text-lavender"
+        >
+          + New player
+        </button>
+      </div>
+      {adding && (
+        <PlayerSheet
+          player={null}
+          onClose={() => setAdding(false)}
+          onSaved={(o) => void toggleOpponentInHand(hand, o.id)}
+        />
+      )}
+    </Card>
   );
 }

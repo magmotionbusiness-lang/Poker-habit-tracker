@@ -1,7 +1,14 @@
 "use client";
 
 import { z } from "zod";
-import type { Hand, HandCollection, HandReview, Rule, RuleCategory } from "@/lib/domain/types";
+import type {
+  Hand,
+  HandCollection,
+  HandReview,
+  Opponent,
+  Rule,
+  RuleCategory,
+} from "@/lib/domain/types";
 import { db } from "@/lib/db/db";
 import { deleteRows, getSettings, newId, nowIso, putRow, putRows } from "@/lib/db/repo";
 import { localDate } from "@/lib/dates/dates";
@@ -183,5 +190,48 @@ async function countReviewHabit() {
     value: (log?.value ?? 0) + 1,
     source: "manual" as const,
     updated_at: nowIso(),
+  });
+}
+
+/* ---------- Player database ---------- */
+
+export async function saveOpponent(
+  input: Partial<Opponent> & { nickname: string },
+): Promise<Opponent> {
+  const nickname = input.nickname.trim().slice(0, 60);
+  if (!nickname) throw new Error("Give them a name");
+  const now = nowIso();
+  const existing = input.id ? await db().opponents.get(input.id) : undefined;
+  return putRow("opponents", {
+    id: input.id ?? newId(),
+    nickname,
+    venue_id: input.venue_id ?? existing?.venue_id ?? null,
+    description: input.description ?? existing?.description ?? null,
+    tags: input.tags ?? existing?.tags ?? [],
+    notes: input.notes ?? existing?.notes ?? null,
+    style: input.style ?? existing?.style ?? "unknown",
+    traits: input.traits ?? existing?.traits ?? {},
+    avatar: input.avatar ?? existing?.avatar ?? null,
+    created_at: existing?.created_at ?? now,
+    updated_at: now,
+  } satisfies Opponent);
+}
+
+export async function deleteOpponent(id: string) {
+  const linked = await db().hands.where("opponent_ids").equals(id).toArray();
+  if (linked.length)
+    await putRows(
+      "hands",
+      linked.map((h) => ({ ...h, opponent_ids: (h.opponent_ids ?? []).filter((x) => x !== id) })),
+    );
+  await deleteRows("opponents", [id]);
+}
+
+export async function toggleOpponentInHand(h: Hand, opponentId: string) {
+  const ids = h.opponent_ids ?? [];
+  return updateHand(h, {
+    opponent_ids: ids.includes(opponentId)
+      ? ids.filter((x) => x !== opponentId)
+      : [...ids, opponentId],
   });
 }

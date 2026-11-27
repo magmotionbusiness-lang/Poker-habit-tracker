@@ -84,6 +84,8 @@ export type PokerSession = Row & {
   notes: string | null;
   tags: string[];
   status: "running" | "finished";
+  /** Post-session mood 1 (tilted) … 5 (great); correlated with results in insights. */
+  mood?: number | null;
 };
 
 export type StackUpdate = {
@@ -216,6 +218,32 @@ export type Hand = Row & {
   is_public: boolean;
   /** Custom sections this hand is in. */
   collection_ids: string[];
+  /** Opponents in this hand (player database). */
+  opponent_ids?: string[];
+};
+
+export type OpponentStyle =
+  | "unknown"
+  | "tight_passive"
+  | "tight_aggressive"
+  | "loose_passive"
+  | "loose_aggressive"
+  | "maniac"
+  | "rock"
+  | "calling_station";
+
+/** A tendency you've observed, with how many hands back it up (fact vs assumption). */
+export type Trait = { level: "low" | "medium" | "high"; evidence: number };
+
+export type Opponent = Row & {
+  nickname: string;
+  venue_id: string | null;
+  description: string | null;
+  tags: string[];
+  notes: string | null;
+  style: OpponentStyle | null;
+  traits: Record<string, Trait>;
+  avatar: string | null;
 };
 
 export type HandCollection = Row & { name: string; emoji: string | null; sort_order: number };

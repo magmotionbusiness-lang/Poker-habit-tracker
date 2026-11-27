@@ -90,6 +90,8 @@ test.describe("Phase 2: hands", () => {
     await page.getByLabel(/Preflop/).fill("Open was fine.");
     await page.getByLabel(/The rule/).fill("Never slowplay sets on wet boards.");
     await tapInSheet(page, page.getByRole("button", { name: /Save review & rule/ }));
+    // The text is briefly in both the closing sheet and the page: wait for the sheet to go.
+    await expect(page.getByRole("dialog")).toBeHidden();
     await expect(page.getByText("Never slowplay sets on wet boards.")).toBeVisible();
     await page.goto("/hands/leaks");
     await expect(page.getByText("Never slowplay sets on wet boards.")).toBeVisible();

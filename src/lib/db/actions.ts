@@ -67,6 +67,7 @@ export const sessionInput = z
       .string()
       .regex(/^\d+(\.\d+)?$/)
       .nullable(),
+    mood: z.number().int().min(1).max(5).nullish(),
     started_at: z.iso.datetime(),
     ended_at: z.iso.datetime().nullable(),
     paused_ms: nonNeg,

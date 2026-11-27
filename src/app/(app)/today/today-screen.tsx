@@ -23,6 +23,8 @@ import { ShareSheet } from "@/components/share/share-sheet";
 import { DailyHandCard } from "@/components/today/daily-hand-card";
 import { WeeklyFocus } from "@/components/today/weekly-focus";
 import { NudgeCard } from "@/components/today/nudge-card";
+import { TopInsightCard } from "@/components/insights/insight-card";
+import { PlayingTonight } from "@/components/insights/playing-tonight";
 import { HabitRingButton } from "@/components/today/habit-ring-button";
 import { TodayHero } from "@/components/today/today-hero";
 import { FireOnMount } from "@/components/fx/fire-on-mount";
@@ -130,6 +132,7 @@ export function TodayScreen() {
       </div>
 
       <RunningBanner />
+      <PlayingTonight />
       <StudyTimerBanner />
 
       {streak.repair && (
@@ -201,6 +204,7 @@ export function TodayScreen() {
         </Card>
       )}
 
+      <TopInsightCard today={today} />
       <ThisWeek today={today} tz={engine.tz} />
       <WeeklyFocus today={today} />
       <LastTakeaway today={today} />

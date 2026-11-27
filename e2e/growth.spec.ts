@@ -20,7 +20,8 @@ test.describe("Phase 3: growth layer", () => {
     await expect(page.getByText("Stake ladder")).toBeVisible();
     await expect(page.getByRole("list", { name: "Stakes" })).toBeVisible();
     await expect(page.getByRole("progressbar", { name: /Progress to/ })).toBeVisible();
-    await expect(page.getByText("What's working")).toBeVisible();
+    await expect(page.getByText("Here's what I noticed").first()).toBeVisible();
+    await expect(page.getByText(/Confidence|Small sample/).first()).toBeVisible();
 
     await tap(page, page.getByRole("button", { name: /Write this week's review/ }));
     await page.getByLabel("What went well?").fill("Stuck to my stop-loss.");
@@ -84,5 +85,48 @@ test.describe("Phase 3: growth layer", () => {
     await expect(page.getByText("Admins only")).toBeVisible();
     await page.goto("/more");
     await expect(page.getByRole("link", { name: /^Admin/ })).toHaveCount(0);
+  });
+
+  test("journey: story, monthly report and a shareable year", async ({ page }) => {
+    await demo(page);
+    await page.goto("/progress");
+    await tap(page, page.getByRole("link", { name: /Your poker journey/ }));
+    await expect(page).toHaveURL(/\/progress\/journey$/);
+    await expect(page.getByText("Lifetime result")).toBeVisible();
+    await expect(page.getByText("Highlights")).toBeVisible();
+    await expect(page.getByText("Monthly report", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Share my year/ })).toBeVisible();
+  });
+
+  test("players: add a player, tag them in a hand, see the record", async ({ page }) => {
+    await demo(page);
+    await page.goto("/hands/players");
+    await expect(page.getByText("Big Tony")).toBeVisible();
+    await tap(page, page.getByRole("button", { name: "Add", exact: true }));
+    await page.getByLabel("Name or nickname").fill("Sunglasses Sam");
+    await page.getByRole("radio", { name: "Maniac" }).evaluate((el) => (el as HTMLElement).click());
+    await page
+      .getByRole("button", { name: "Save player" })
+      .evaluate((el) => (el as HTMLElement).click());
+    await expect(page.getByText("Sunglasses Sam")).toBeVisible();
+
+    await page.goto("/hands");
+    await page.locator('a[href^="/hands/view"]').first().click();
+    await tap(page, page.getByRole("button", { name: /Sunglasses Sam/ }));
+    await expect(page.getByRole("button", { name: /Sunglasses Sam/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await page.goto("/hands/players");
+    await tap(page, page.getByRole("link", { name: /Sunglasses Sam/ }));
+    await expect(page.getByText("Shared hands · 1")).toBeVisible();
+  });
+
+  test("bankroll intelligence: net worth, risk and forecast", async ({ page }) => {
+    await demo(page);
+    await page.goto("/bankroll");
+    await expect(page.getByText("Bankroll intelligence")).toBeVisible();
+    await expect(page.getByText("Total poker net worth")).toBeVisible();
+    await expect(page.getByText("Where you could be")).toBeVisible();
   });
 });

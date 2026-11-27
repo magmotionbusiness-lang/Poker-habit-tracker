@@ -8,7 +8,9 @@ import { Heatmap } from "@/components/charts/heatmap";
 import { CountUp } from "@/components/fx/count-up";
 import { MilestoneBadges } from "@/components/progress/milestone-badges";
 import { StakeLadder } from "@/components/progress/stake-ladder";
-import { WhatsWorking } from "@/components/progress/whats-working";
+import { InsightsList } from "@/components/insights/insight-card";
+import { PositionMap } from "@/components/insights/position-map";
+import { JourneyLink } from "@/components/insights/journey-link";
 import { WeeklyReviewSheet } from "@/components/progress/weekly-review-sheet";
 import { weeklyReview } from "@/content/weekly-review";
 import { useSettings } from "@/lib/db/hooks";
@@ -145,7 +147,11 @@ export function ProgressScreen() {
 
       <StakeLadder />
 
-      <WhatsWorking />
+      <JourneyLink />
+
+      <InsightsList />
+
+      <PositionMap />
 
       <Card>
         <CardHeader

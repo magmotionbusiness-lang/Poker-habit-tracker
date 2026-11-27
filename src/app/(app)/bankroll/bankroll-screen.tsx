@@ -18,6 +18,7 @@ import { WinLossCalendar } from "@/components/charts/win-loss-calendar";
 import { StatsFilterSheet, type RangeKey } from "@/components/bankroll/stats-filter-sheet";
 import { formatDuration } from "@/components/sessions/timer";
 import { CountUp } from "@/components/fx/count-up";
+import { BankrollIntel } from "@/components/bankroll/bankroll-intel";
 import { PageHeader } from "@/components/shell/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -302,6 +303,8 @@ export function BankrollScreen() {
           <WinLossCalendar results={view.daily} today={today} currency={ccy} />
         </div>
       </Card>
+
+      <BankrollIntel />
 
       <section aria-labelledby="sessions-h" className="space-y-2">
         <h2 id="sessions-h" className="eyebrow px-1 !font-sans">

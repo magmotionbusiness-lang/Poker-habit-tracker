@@ -32,4 +32,18 @@ describe("share cards", () => {
     expect(shareContent(goal, true).unit).toBe("Reach bankroll");
     expect(shareContent(goal, false).big).toBe("64%");
   });
+
+  it("year card hides money when asked", () => {
+    const y = {
+      kind: "year" as const,
+      year: "2027",
+      hours: 412,
+      net: "+$8,240",
+      hourly: "+$20",
+      winRate: 0.61,
+    };
+    expect(shareContent(y, false).lines[0]).toBe("+$8,240 · +$20/h");
+    expect(shareContent(y, true).lines.join(" ")).not.toContain("$");
+    expect(shareContent(y, true).big).toBe("412h");
+  });
 });
