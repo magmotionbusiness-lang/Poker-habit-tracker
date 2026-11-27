@@ -34,6 +34,9 @@ export function PlayerSheet({
           <Label htmlFor="pl-name">Name or nickname</Label>
           <Input
             id="pl-name"
+            name="player-nickname"
+            autoComplete="off"
+            data-1p-ignore
             maxLength={60}
             placeholder="Mike (seat 4)"
             value={name}

@@ -24,7 +24,7 @@ export function WelcomeScreen() {
 
   // Returning users skip the welcome screen (but not while we're starting a new guest).
   useEffect(() => {
-    if (hydrated && mode !== null && !starting.current) router.replace("/today");
+    if (hydrated && mode !== null && !starting.current) router.replace("/home");
   }, [hydrated, mode, router]);
 
   const fade = (delay: number) =>

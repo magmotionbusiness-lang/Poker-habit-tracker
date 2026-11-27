@@ -19,7 +19,7 @@ export default function OfflinePage() {
           device and syncs when you&apos;re back.
         </p>
         <Button className="mt-6" asChild>
-          <Link href="/today">Go to Today</Link>
+          <Link href="/home">Go to Home</Link>
         </Button>
       </div>
     </main>

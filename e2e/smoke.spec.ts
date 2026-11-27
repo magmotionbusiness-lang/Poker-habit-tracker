@@ -14,15 +14,16 @@ async function onboard(page: Page, bankroll = "2000") {
   await page.getByRole("button", { name: "Continue" }).click(); // reminders
   await page.getByRole("button", { name: "Continue" }).click(); // UTS code
   await page.getByRole("button", { name: "Build my system" }).click();
-  await expect(page).toHaveURL(/\/today$/);
-  await expect(page.getByRole("heading", { name: "Today" })).toBeVisible();
+  await expect(page).toHaveURL(/\/home$/);
+  await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
 }
 
 test.describe("Phase 1 flows", () => {
   test("onboarding creates habits, a goal and a bankroll", async ({ page }) => {
     await onboard(page);
+    await expect(page.getByText("Make my first $50k from poker")).toBeVisible(); // main goal on Home
+    await page.goto("/today");
     await expect(page.getByRole("button", { name: /^Review hands: 0 of 3/ })).toBeVisible();
-    await expect(page.getByText("Make my first $50k from poker")).toBeVisible();
     await page
       .getByRole("navigation", { name: "Main" })
       .getByRole("link", { name: "Bankroll" })
@@ -32,6 +33,7 @@ test.describe("Phase 1 flows", () => {
 
   test("habit check-off counts the day for the streak", async ({ page }) => {
     await onboard(page);
+    await page.goto("/today");
     for (let i = 0; i < 3; i++)
       await page.getByRole("button", { name: new RegExp(`^Review hands: ${i} of 3`) }).click();
     await expect(page.getByText("Today counts. Streak safe.")).toBeVisible();
@@ -71,7 +73,7 @@ test.describe("Phase 1 flows", () => {
     await expect(page.getByText("Session report")).toBeVisible();
     await page.getByRole("radio", { name: "Great" }).click();
     await page.getByRole("button", { name: "Done", exact: true }).click();
-    await expect(page).toHaveURL(/\/today$/);
+    await expect(page).toHaveURL(/\/home$/);
 
     await page.goto("/bankroll");
     await expect(page.getByText("$2,100").first()).toBeVisible();
@@ -82,7 +84,7 @@ test.describe("Phase 1 flows", () => {
     await page.goto("/");
     await page.getByRole("button", { name: /Start without an account/ }).click();
     await page.getByRole("button", { name: /Load a demo player/ }).click();
-    await expect(page).toHaveURL(/\/today$/);
+    await expect(page).toHaveURL(/\/home$/);
     await expect(page.getByRole("img", { name: "23-day streak" })).toBeVisible();
     await expect(page.getByText("64%")).toBeVisible();
     await page.goto("/bankroll");
@@ -98,13 +100,21 @@ test.describe("Phase 1 flows", () => {
   test("tabs and quick add", async ({ page }) => {
     await onboard(page);
     const nav = page.getByRole("navigation", { name: "Main" });
-    for (const tab of ["Bankroll", "Hands", "Progress", "More"]) {
-      await nav.getByRole("link", { name: tab }).click();
+    // Home is the centre tab; settings live behind the gear on Home.
+    for (const tab of ["Today", "Hands", "Bankroll", "Progress", "Home"]) {
+      await nav.getByRole("link", { name: tab, exact: true }).click();
       await expect(page.getByRole("heading", { level: 1, name: tab })).toBeVisible();
-      await expect(nav.getByRole("link", { name: tab })).toHaveAttribute("aria-current", "page");
+      await expect(nav.getByRole("link", { name: tab, exact: true })).toHaveAttribute(
+        "aria-current",
+        "page",
+      );
     }
     await page.getByRole("button", { name: "Quick add" }).click();
     await expect(page.getByRole("dialog")).toContainText("Log finished session");
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toBeHidden();
+    await page.getByRole("link", { name: "Settings & more" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Settings & more" })).toBeVisible();
   });
 
   test("display preferences are saved on the device", async ({ page }) => {

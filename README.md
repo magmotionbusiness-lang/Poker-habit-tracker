@@ -37,6 +37,7 @@ pnpm dev                      # http://localhost:3000
 | ------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
 | `/`                                                          | Welcome — start as guest or sign in                                                 |
 | `/onboarding`                                                | 8 steps: formats, stakes & currency, bankroll, goal, habits, reminders, code, email |
+| `/home`                                                      | Home (centre tab): bankroll, period results, top insight, streak, goal, recent      |
 | `/today`                                                     | Habits, streak, goal, Daily Hand, weekly focus, announcements, nudges               |
 | `/bankroll`                                                  | Balance/results graph, filtered stats, A/B/C insight, monthly, win/loss calendar    |
 | `/session`                                                   | Live session: timer, stack updates, chip graph, pause, stop-loss, cool-down         |

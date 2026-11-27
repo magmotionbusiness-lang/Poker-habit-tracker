@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
@@ -15,6 +16,7 @@ import {
   ShieldCheck,
   Smartphone,
   Sparkles,
+  ArrowLeft,
   BellOff,
   Music2,
   UserRound,
@@ -59,7 +61,13 @@ export function MoreScreen() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow={brand.appName} title="More" />
+      <Link
+        href="/home"
+        className="-ml-2 inline-flex h-11 items-center gap-1.5 px-2 pt-3 text-sm font-semibold text-ink-soft"
+      >
+        <ArrowLeft className="size-4" aria-hidden /> Home
+      </Link>
+      <PageHeader eyebrow={brand.appName} title="Settings & more" />
 
       <ListGroup title={brand.coach.business}>
         <ListRow

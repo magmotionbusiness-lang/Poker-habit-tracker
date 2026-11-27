@@ -8,7 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: brand.appName,
     short_name: brand.appShortName,
     description: brand.description,
-    start_url: "/today?source=pwa",
+    start_url: "/home?source=pwa",
     scope: "/",
     display: "standalone",
     orientation: "any",

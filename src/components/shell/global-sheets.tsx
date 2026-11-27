@@ -24,7 +24,7 @@ export function GlobalSheets() {
           session={report.session}
           onClose={() => {
             report.close();
-            router.push("/today");
+            router.push("/home");
           }}
         />
       )}

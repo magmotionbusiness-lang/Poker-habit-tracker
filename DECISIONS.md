@@ -380,3 +380,18 @@ neutral ("outside your normal pattern") and dismissible; the bankroll rule warns
 - Position heatmap and player records come from logged hands only, labelled as such (big pots
   are over-represented), so they're review guides, not win rates.
 - The old "What's working" card is superseded by the insight engine (same dimensions + more).
+
+## Navigation: Home in the middle (2026-11-27)
+
+Tabs: Today · Hands · **Home** · Bankroll · Progress. Home (`/home`) is the analytics dashboard
+("How is my poker going?": bankroll, Week/Month/All-time result, hourly, volume, the top insight,
+streak, main goal, recent sessions, announcement, nudge) and is where the app opens. It's the
+raised centre button and glows/breathes when active; a pill glides between the other tabs.
+Today is now just the daily routine (habits, Daily Hand, weekly focus, rule of the day).
+Settings (`/more`, "Settings & more") moved behind the gear on Home. The floating "+" is gone —
+Quick add is the "+" in the Home and Today headers (it covered content).
+
+Sheets and the iOS keyboard: vaul's `repositionInputs` double-shifted sheets inside the
+home-screen app (the new-bankroll sheet jumped off screen). It's off; `Sheet` pins its bottom to
+the top of the keyboard via `visualViewport` and caps its height to the visible area. Name-like
+fields that aren't people (bankroll, player) turn off AutoFill so iOS stops offering contacts.

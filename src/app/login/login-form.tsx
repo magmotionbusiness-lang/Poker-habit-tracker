@@ -69,7 +69,7 @@ export function LoginForm() {
       return setError("That code didn't work. Check the latest email or request a new one.");
     setMode("account");
     toast.success("You're signed in.");
-    router.replace("/today");
+    router.replace("/home");
   }
 
   async function google() {

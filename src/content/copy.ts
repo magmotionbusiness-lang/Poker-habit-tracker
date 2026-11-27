@@ -14,6 +14,7 @@ export const copy = {
       "Guest mode keeps everything on this device. Create an account any time to back up and sync.",
   },
   tabs: {
+    home: "Home",
     today: "Today",
     bankroll: "Bankroll",
     hands: "Hands",

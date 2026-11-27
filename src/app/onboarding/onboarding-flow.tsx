@@ -238,7 +238,7 @@ export function OnboardingFlow() {
             : null,
         onboardingDone: true,
       });
-      router.replace("/today");
+      router.replace("/home");
     } catch (e) {
       toast.error(errorMessage(e));
       setBusy(false);
@@ -313,7 +313,7 @@ export function OnboardingFlow() {
                     onClick={async () => {
                       setBusy(true);
                       await loadDemoData();
-                      router.replace("/today");
+                      router.replace("/home");
                     }}
                   >
                     {copy.demo} →

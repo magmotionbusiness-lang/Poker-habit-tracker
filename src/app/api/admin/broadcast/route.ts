@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     const r = await sendPush(sub, {
       title: msg.title,
       body: msg.body,
-      url: msg.url ?? "/today",
+      url: msg.url ?? "/home",
       tag: "uts-broadcast",
     });
     if (r === "ok") sent++;

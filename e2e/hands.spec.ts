@@ -20,7 +20,7 @@ async function guest(page: Page, demo = false) {
   await page.getByRole("button", { name: /Start without an account/ }).click();
   if (demo) {
     await page.getByRole("button", { name: /Load a demo player/ }).click();
-    await expect(page).toHaveURL(/\/today$/);
+    await expect(page).toHaveURL(/\/home$/);
   }
 }
 

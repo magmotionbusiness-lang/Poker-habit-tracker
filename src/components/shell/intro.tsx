@@ -80,7 +80,6 @@ export function Intro() {
               </span>
             ))}
           </p>
-          <p className="intro-by">by Up The Stakes</p>
         </div>
       </div>
     </>

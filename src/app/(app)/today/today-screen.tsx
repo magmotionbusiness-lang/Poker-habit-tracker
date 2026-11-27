@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import {
-  BookOpen,
   ChevronRight,
   Inbox,
   Play,
@@ -14,17 +13,13 @@ import {
   Timer,
 } from "lucide-react";
 import { StreakFlame } from "@/components/brand/streak-flame";
-import { GoalCard } from "@/components/goals/goal-card";
-import { formatClock, formatDuration } from "@/components/sessions/timer";
+import { formatClock } from "@/components/sessions/timer";
 import { InstallPrompt } from "@/components/shell/install-prompt";
 import { PageHeader } from "@/components/shell/page-header";
-import { AnnouncementSlot } from "@/components/uts/announcements";
+import { QuickAddButton } from "@/components/shell/quick-add";
 import { ShareSheet } from "@/components/share/share-sheet";
 import { DailyHandCard } from "@/components/today/daily-hand-card";
 import { WeeklyFocus } from "@/components/today/weekly-focus";
-import { NudgeCard } from "@/components/today/nudge-card";
-import { TopInsightCard } from "@/components/insights/insight-card";
-import { PlayingTonight } from "@/components/insights/playing-tonight";
 import { HabitRingButton } from "@/components/today/habit-ring-button";
 import { TodayHero } from "@/components/today/today-hero";
 import { FireOnMount } from "@/components/fx/fire-on-mount";
@@ -36,21 +31,19 @@ import { Dialog } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { setHabitValue } from "@/lib/db/actions";
 import { useHabitEngine } from "@/lib/db/derived";
-import { useGoalViews } from "@/lib/db/goal-hooks";
 import {
   useNow,
   useRunningSession,
   useSessions,
   useStackUpdates,
-  useStudySessions,
   useHands,
   useRules,
 } from "@/lib/db/hooks";
 import { ruleOfTheDay } from "@/lib/hands/leaks";
-import { addDays, localDate, startOfWeek } from "@/lib/dates/dates";
+import { addDays } from "@/lib/dates/dates";
 import { haptic } from "@/lib/haptics";
 import { formatMoney } from "@/lib/money";
-import { resultIn, sessionDurationMs } from "@/lib/stats/session-math";
+import { sessionDurationMs } from "@/lib/stats/session-math";
 import { STREAK_MILESTONES } from "@/lib/streaks/streaks";
 import { useAppStore } from "@/lib/store/app-store";
 import { useStudyTimer, useUi } from "@/lib/store/ui-store";
@@ -70,8 +63,6 @@ export function TodayScreen() {
     () => "Welcome back",
   );
   const engine = useHabitEngine();
-  const currency = useAppStore((s) => s.prefs.currency);
-  const goals = useGoalViews(currency);
   const open = useUi((s) => s.open);
   const dismissed = useAppStore((s) => s.dismissed);
   const dismiss = useAppStore((s) => s.dismiss);
@@ -88,7 +79,6 @@ export function TodayScreen() {
   }
   const { streak, todayInput, today } = engine;
   const habits = todayInput.habits.filter((h) => h.habit.active);
-  const main = goals?.find((g) => g.goal.is_main) ?? goals?.[0];
   const yesterday = addDays(today, -1);
   // Celebrate a milestone on the day it's reached (or the morning after), not days later.
   const milestone = [...STREAK_MILESTONES]
@@ -119,7 +109,7 @@ export function TodayScreen() {
 
   return (
     <div className="space-y-4">
-      <PageHeader eyebrow={greeting} title="Today" />
+      <PageHeader eyebrow={greeting} title="Today" action={<QuickAddButton />} />
 
       <div id="today-hero">
         <TodayHero
@@ -132,7 +122,6 @@ export function TodayScreen() {
       </div>
 
       <RunningBanner />
-      <PlayingTonight />
       <StudyTimerBanner />
 
       {streak.repair && (
@@ -191,26 +180,9 @@ export function TodayScreen() {
         )}
       </Card>
 
-      {main ? (
-        <Link href="/progress" className="block">
-          <GoalCard view={main} />
-        </Link>
-      ) : (
-        <Card className="text-center">
-          <p className="font-semibold">Set your main goal</p>
-          <Button className="mt-3" size="sm" asChild>
-            <Link href="/progress">Add goal</Link>
-          </Button>
-        </Card>
-      )}
-
-      <TopInsightCard today={today} />
-      <ThisWeek today={today} tz={engine.tz} />
       <WeeklyFocus today={today} />
       <LastTakeaway today={today} />
       <DailyHandCard />
-      <AnnouncementSlot />
-      <NudgeCard today={today} tz={engine.tz} streak={streak.current} />
 
       {milestone && milestoneKey && !dismissed[milestoneKey] && (
         <Dialog
@@ -250,7 +222,7 @@ export function TodayScreen() {
   );
 }
 
-function RunningBanner() {
+export function RunningBanner() {
   const running = useRunningSession();
   const updates = useStackUpdates(running?.id ?? null) ?? [];
   const now = useNow(1000);
@@ -298,54 +270,6 @@ function StudyTimerBanner() {
         </span>
       </Card>
     </button>
-  );
-}
-
-function ThisWeek({ today, tz }: { today: string; tz: string }) {
-  const sessions = useSessions();
-  const study = useStudySessions();
-  const currency = useAppStore((s) => s.prefs.currency);
-  const week = useMemo(() => {
-    if (!sessions || !study) return null;
-    const from = startOfWeek(today);
-    const inWeek = sessions.filter(
-      (s) => s.status === "finished" && localDate(s.started_at, tz) >= from,
-    );
-    const ms = inWeek.reduce((a, s) => a + sessionDurationMs(s), 0);
-    const net = inWeek.reduce((a, s) => a + (resultIn(s, currency, {}, true) ?? 0), 0);
-    const mixed = inWeek.some((s) => s.currency !== currency);
-    const minutes = study
-      .filter((s) => localDate(s.started_at, tz) >= from)
-      .reduce((a, s) => a + s.minutes, 0);
-    return { count: inWeek.length, ms, net, mixed, minutes };
-  }, [sessions, study, today, tz, currency]);
-  if (!week) return null;
-  return (
-    <div className="grid grid-cols-2 gap-3">
-      <Card className="p-4">
-        <p className="eyebrow mb-3">This week</p>
-        <p
-          className={`num font-display text-[28px] leading-none font-semibold ${week.net > 0 ? "text-success" : week.net < 0 ? "text-danger" : ""}`}
-        >
-          {formatMoney(
-            { minor: week.net, currency },
-            { signed: true, compact: Math.abs(week.net) >= 1_000_000, trimZeroCents: true },
-          )}
-        </p>
-        <p className="mt-1.5 text-sm text-ink-muted">
-          {week.count} session{week.count === 1 ? "" : "s"} · {formatDuration(week.ms)}
-          {week.mixed && " · other currencies excluded"}
-        </p>
-      </Card>
-      <Card className="p-4">
-        <BookOpen className="mb-3 size-5 text-lavender" strokeWidth={1.6} aria-hidden />
-        <p className="num font-display text-[28px] leading-none font-semibold">
-          {week.minutes}
-          <span className="text-base text-ink-muted"> min</span>
-        </p>
-        <p className="mt-1.5 text-sm text-ink-muted">studied this week</p>
-      </Card>
-    </div>
   );
 }
 

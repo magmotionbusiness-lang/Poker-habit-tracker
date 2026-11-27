@@ -10,7 +10,7 @@ async function demo(page: Page) {
   await page.goto("/");
   await page.getByRole("button", { name: /Start without an account/ }).click();
   await page.getByRole("button", { name: /Load a demo player/ }).click();
-  await expect(page).toHaveURL(/\/today$/);
+  await expect(page).toHaveURL(/\/home$/);
 }
 
 test.describe("Phase 3: growth layer", () => {
@@ -34,6 +34,7 @@ test.describe("Phase 3: growth layer", () => {
 
   test("daily hand answers once and shows the explanation", async ({ page }) => {
     await demo(page);
+    await page.goto("/today");
     const group = page.getByRole("group", { name: "Your play" });
     await group.scrollIntoViewIfNeeded();
     await tap(page, group.getByRole("button").first());

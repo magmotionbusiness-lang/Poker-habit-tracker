@@ -1,8 +1,8 @@
 "use client";
 
 import { ArrowLeftRight, BookOpen, NotebookPen, Play, Plus, Timer } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
 import { copy } from "@/content/copy";
 import { haptic } from "@/lib/haptics";
@@ -17,16 +17,33 @@ const actions = [
   { key: "transaction", icon: ArrowLeftRight },
 ] as const;
 
-/** Floating "+" that opens the quick-add sheet. Sits above the tab bar, thumb-reachable. */
+/** The "+" button that opens Quick add. Lives in the Home and Today headers. */
+export function QuickAddButton() {
+  const open = useUi((s) => s.open);
+  return (
+    <Button
+      size="icon-sm"
+      aria-label="Quick add"
+      aria-haspopup="dialog"
+      onClick={() => {
+        haptic();
+        open("quick-add");
+      }}
+    >
+      <Plus className="size-5" strokeWidth={2.4} aria-hidden />
+    </Button>
+  );
+}
+
+/** The quick-add sheet (mounted once; opened from any header's "+"). */
 export function QuickAdd() {
-  const [open, setOpen] = useState(false);
   const router = useRouter();
   const ui = useUi();
   const running = useRunningSession();
-  const pathname = usePathname();
+  const open = ui.sheet === "quick-add";
 
   function run(key: (typeof actions)[number]["key"]) {
-    setOpen(false);
+    ui.close();
     switch (key) {
       case "startSession":
         return running ? router.push("/session") : ui.open("start-session");
@@ -42,25 +59,7 @@ export function QuickAdd() {
   }
   return (
     <>
-      {!/^\/(sessions\/edit|hands\/new|hands\/view)/.test(pathname) && (
-        <button
-          type="button"
-          aria-label="Quick add"
-          aria-haspopup="dialog"
-          onClick={() => {
-            haptic();
-            setOpen(true);
-          }}
-          className="anim-breathe fixed right-[max(16px,var(--safe-right))] bottom-[calc(var(--tabbar-height)+var(--safe-bottom)+16px)] z-40 grid size-14 place-items-center rounded-full bg-[image:var(--gradient-primary)] text-white shadow-accent transition-transform duration-300 active:scale-90"
-        >
-          <Plus
-            className={`size-7 transition-transform duration-500 ease-[cubic-bezier(0.2,0.9,0.25,1.25)] ${open ? "rotate-[135deg]" : ""}`}
-            strokeWidth={2.2}
-            aria-hidden
-          />
-        </button>
-      )}
-      <Sheet open={open} onOpenChange={setOpen} title={copy.quickAdd.title}>
+      <Sheet open={open} onOpenChange={(o) => (o ? null : ui.close())} title={copy.quickAdd.title}>
         <ul className="stagger space-y-2">
           {actions.map(({ key, icon: Icon, ...rest }) => {
             const item = copy.quickAdd[key];

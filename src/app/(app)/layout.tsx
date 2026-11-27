@@ -25,7 +25,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
       <TopFade />
       <main
         id="main"
-        className="px-safe pt-safe mx-auto min-h-dvh max-w-lg pb-[calc(var(--tabbar-height)+var(--safe-bottom)+96px)] md:max-w-2xl"
+        className="px-safe pt-safe mx-auto min-h-dvh max-w-lg pb-[calc(var(--tabbar-height)+var(--safe-bottom)+56px)] md:max-w-2xl"
       >
         {/* Screens read on-device data (IndexedDB, clock, timezone): render after hydration. */}
         <ClientOnly fallback={<ScreenSkeleton />}>{children}</ClientOnly>

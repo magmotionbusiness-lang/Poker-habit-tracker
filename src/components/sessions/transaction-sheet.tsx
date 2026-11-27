@@ -171,10 +171,17 @@ export function BankrollSheet() {
     >
       <div className="space-y-4">
         <div>
-          <Label htmlFor="br-name">Name</Label>
+          <Label htmlFor="br-label">Bankroll name</Label>
           <Input
-            id="br-name"
+            id="br-label"
+            name="bankroll-label"
             placeholder="Online"
+            autoComplete="off"
+            autoCorrect="off"
+            data-1p-ignore
+            data-lpignore="true"
+            enterKeyHint="done"
+            maxLength={60}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
